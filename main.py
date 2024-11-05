@@ -1,17 +1,18 @@
 '''Жоров Евгений Александрович
 гр. 10701123
 @vanasokolov844@gmail.com
-Курсовой проект по дицсиплине "Языки программирования"
+Курсовой проект по дисциплине "Языки программирования"
 Минск 2024'''
 
 '''Учет дежурств в общежитии'''
 
 '''Добавить год. При возможности реализовать штуку с пересылкой данных к примеру в ворд файл (типо кнопка отослать коменданту).
-В будущем добавлю сортировки. У нас курсовой ПРОЕКТ (титульник). Добавить ввод комнаты. Типо БЛОК  у меня есть(513), а комната А или Б'''
+В будущем добавлю сортировки.'''
 
 import tkinter as tk
 from tkinter import ttk
 from tkinter import messagebox
+import threading
 
 #Класс для Label
 class MyLabel(tk.Label):
@@ -33,6 +34,16 @@ class MyButton(tk.Button):
         super().__init__(master, text=text, font = font, width = width, height = height, fg = fg, bg = bg, image = image, compound = compound, command = command, **kwargs)
         self.place(x = x, y = y)
 
+
+
+
+
+
+
+'''class Inactivity():
+    def __init__(self):'''
+
+#Класс приложения
 class MyApp(tk.Tk):
 
     def __init__(self):
@@ -41,6 +52,7 @@ class MyApp(tk.Tk):
 
         self.title("Учет дежурств")
         self.geometry('800x800')
+        self.geometry('+500+100')
         self.resizable(width = False, height = False)
 
         #Словарь для хранения записанных дат
@@ -91,7 +103,7 @@ class MyApp(tk.Tk):
 
         self.label3 = MyLabel(self.frame1, text = 'Кафедра программного обеспечения информационных систем и технологий', x = 120, y = 80)
 
-        self.label4 = MyLabel(self.frame1, text='Курсовая работа',font_size=16, font_weight = 'bold', x = 300, y = 160)
+        self.label4 = MyLabel(self.frame1, text='Курсовой проект',font_size=16, font_weight = 'bold', x = 300, y = 160)
 
         self.label5 = MyLabel(self.frame1, text='По дисциплине "Языки программирования"', font_size=16, font_weight='bold', x = 160, y = 200)
 
@@ -138,13 +150,15 @@ class MyApp(tk.Tk):
 
         self.label23 = MyLabel(self.frameMain, text="Блок", font_size=10, bg='#eedcfc', x = 280, y = 70)
 
-        self.label24 = MyLabel(self.frameMain, text="Номер телефона", font_size=10, bg='#eedcfc', x = 400, y = 70)
+        self.label24 = MyLabel(self.frameMain, text="Номер телефона", font_size=10, bg='#eedcfc', x = 400, y = 140)
 
         self.label24 = MyLabel(self.frameMain, text="Время", font_size=10, bg='#eedcfc', x = 280, y = 140)
 
         self.label25 = MyLabel(self.frameMain, text="Месяц",font_size=10, bg='#eedcfc', x = 20, y = 140)
 
         self.label26 = MyLabel(self.frameMain, text="День", font_size=10, bg='#eedcfc', x = 150, y = 140)
+
+        self.label27 = MyLabel(self.frameMain, text="Комната", font_size=10, bg='#eedcfc', x = 400, y = 70)
 
         #Entry поля на главном окне
         #Ввод фамилии
@@ -161,7 +175,8 @@ class MyApp(tk.Tk):
 
         #Ввод номера тф
         self.entry4 = tk.Entry(self.frameMain, width=18)
-        self.entry4.place(x=400, y=100)
+        self.entry4.place(x=400, y=170)
+
 
         self.dictForMonthDays = {"Январь": 31,
                                  "Февраль": 28,  # Простой год
@@ -191,10 +206,13 @@ class MyApp(tk.Tk):
 
         self.comboboxTimeValues = ['8.00 - 10.30','10.30 - 13.00','13.00 - 15.30','15.30 - 18.00','18.00 - 20.00']
 
-
         #Ввод времени
         self.comboboxTime = ttk.Combobox(self.frameMain, values = self.comboboxTimeValues, width = 11, state="readonly")
         self.comboboxTime.place(x = 280, y = 170)
+
+        #Ввод комнаты
+        self.comboboxRoomInBlock = ttk.Combobox(self.frameMain, values = ['А', 'Б'], width = 11, state = 'readonly')
+        self.comboboxRoomInBlock.place(x = 400, y = 100)
 
         #---------------------------------------------------------------------------------------КАРТИНКИ
         self.imageDormitory = tk.PhotoImage(file = 'images//iconDormitory.png')
@@ -249,9 +267,14 @@ class MyApp(tk.Tk):
         #Картинка для кнопки записаться
         self.imageWrite = tk.PhotoImage(file = 'images//write.png')
 
+        #Картинка для кнопки очистки
         self.imageClear = tk.PhotoImage(file = 'images//clear.png')
 
+        #Картинка для кнопки удалить данные
         self.imageDelete = tk.PhotoImage(file = 'images//delete.png')
+
+        #Картинка для кнопки выбора сортировки
+        self.imageSort = tk.PhotoImage(file = 'images//sort.png')
         #---------------------------------------------------------------------------------КАРТИНКИ
 
         #---------------------------------------------------------------------------------КНОПКИ
@@ -301,6 +324,9 @@ class MyApp(tk.Tk):
         self.buttonDeleteData = MyButton(self.frameMain, text = 'Удалить\nданные', width = 80, height = 60, image = self.imageDelete,
                                          compound = tk.TOP, font_size = 9, font_weight='bold', command = self.deleteAllData, x = 645, y = 320)
 
+        # Кнопка выбрать сортировку
+        self.buttonChooseSort = MyButton(self.frameMain, text='Выбрать\nсортировку', width=80, height=60, image=self.imageSort,
+                                         compound=tk.TOP, font_size=9, font_weight='bold',command = self.chooseSort, x=645, y=425)
 
     #-----------------------------------------------------------------------------------------------------------------КНОПКИ
 
@@ -343,6 +369,7 @@ class MyApp(tk.Tk):
         self.comboboxMonth.config(state = "normal")
         self.comboboxDay.config(state = "normal")
         self.comboboxTime.config(state = "normal")
+        self.comboboxRoomInBlock.config(state = "normal")
 
         self.entry1.delete(0, tk.END)
         self.entry2.delete(0, tk.END)
@@ -351,150 +378,116 @@ class MyApp(tk.Tk):
         self.comboboxMonth.delete(0, tk.END)
         self.comboboxDay.delete(0, tk.END)
         self.comboboxTime.delete(0, tk.END)
+        self.comboboxRoomInBlock.delete(0, tk.END)
 
         self.comboboxMonth.config(state="readonly")
         self.comboboxDay.config(state="readonly")
         self.comboboxTime.config(state="readonly")
-
-
-
+        self.comboboxRoomInBlock.config(state="readonly")
 
     def GetResults(self):
 
-        #Получение данных от пользователя
+        # Получение данных от пользователя
         self.lastName = self.entry1.get()
         self.firstName = self.entry2.get()
-        self.Room = self.entry3.get()
+        self.Block = self.entry3.get()
         self.TelNumber = self.entry4.get()
         self.Month = self.comboboxMonth.get()
         self.Day = self.comboboxDay.get()
         self.Time = self.comboboxTime.get()
+        self.Room = self.comboboxRoomInBlock.get()
 
-        #Проверка на корректность ввода фамилии
+        # Проверка на корректность ввода фамилии
         for symbol in self.lastName:
-
-            if symbol.isdigit() or symbol == '_' or symbol == '-' or symbol == '+' or symbol == '='\
-                    or symbol == '!' or symbol == '@' or symbol == '#' or symbol == '$' or symbol == '%'\
-                    or symbol == '*' or symbol == '^' or symbol == '(' or symbol == ')' or symbol == '&'\
-                    or symbol == '?' or symbol == '~' or symbol == '/' or symbol == '.' or symbol == ',' or symbol == ' ':
-
+            if symbol.isdigit() or symbol in "_-+=!@#$%*^()&?~/.,":
                 tk.messagebox.showerror("Некорректный ввод", "Фамилия введена некорректно!")
-
                 self.entry1.delete(0, tk.END)
-
-                break
+                return
 
         # Проверка на корректность ввода имени
         for symbol in self.firstName:
-
-            if symbol.isdigit() or symbol == '_' or symbol == '-' or symbol == '+' or symbol == '=' \
-                    or symbol == '!' or symbol == '@' or symbol == '#' or symbol == '$' or symbol == '%' \
-                    or symbol == '*' or symbol == '^' or symbol == '(' or symbol == ')' or symbol == '&' \
-                    or symbol == '?' or symbol == '~' or symbol == '/' or symbol == '.' or symbol == ',' or symbol == ' ':
-
+            if symbol.isdigit() or symbol in "_-+=!@#$%*^()&?~/., ":
                 tk.messagebox.showerror("Некорректный ввод", "Имя введено некорректно!")
-
                 self.entry2.delete(0, tk.END)
-
-                break
+                return
 
         # Проверка на корректность ввода блока
-        for symbol in self.Room:
-
-            if symbol == '_' or symbol == '-' or symbol == '+' or symbol == '=' \
-                    or symbol == '!' or symbol == '@' or symbol == '#' or symbol == '$' or symbol == '%' \
-                    or symbol == '*' or symbol == '^' or symbol == '(' or symbol == ')' or symbol == '&' \
-                    or symbol == '?' or symbol == '~' or symbol == '/' or symbol == '.' or symbol == ',' or symbol == ' ':
-
+        for symbol in self.Block:
+            if not symbol.isdigit():
                 tk.messagebox.showerror("Некорректный ввод", "Блок введен некорректно!")
-
                 self.entry3.delete(0, tk.END)
-
-                break
+                return
 
         # Проверка на корректность ввода номера телефона
         for symbol in self.TelNumber:
-
-            if symbol == '_' or symbol == '=' \
-                    or symbol == '!' or symbol == '@' or symbol == '#' or symbol == '$' or symbol == '%' \
-                    or symbol == '*' or symbol == '^' or symbol == '(' or symbol == ')' or symbol == '&' \
-                    or symbol == '?' or symbol == '~' or symbol == '/' or symbol == '.' or symbol == ',' or symbol == ' ':
+            if not symbol.isdigit() and symbol not in "+":
                 tk.messagebox.showerror("Некорректный ввод", "Номер введен некорректно!")
-
                 self.entry4.delete(0, tk.END)
-
-                break
+                return
 
         self.textPlace.config(state='normal')
 
-        #Проверка все ли поля введены
-        if not all([self.lastName, self.firstName, self.Room, self.TelNumber,
-                    self.Month, self.Day, self.Time]):
-
+        # Проверка все ли поля введены
+        if not all([self.lastName, self.firstName, self.Block, self.TelNumber, self.Month, self.Day, self.Time,
+                    self.Room]):
             tk.messagebox.showerror("Ошибка", "Введите все данные!")
+            return
 
-        else:
+        # Цикл для вывода даты и записи занятых дат в словарь
+        for nameOfMonth, MonthNumber in self.DictForMonthes.items():
+            if self.Month == nameOfMonth:
+                if int(self.Day) < 10:
+                    self.concatenateString = "0" + self.Day + "." + MonthNumber
+                else:
+                    self.concatenateString = self.Day + "." + MonthNumber
 
-            # Цикл для вывода даты относительно выбранного ввода и для записи занятых дат в словарь
-            for nameOfMonth, MonthNumber in self.DictForMonthes.items():
-                if self.Month == nameOfMonth:
+                # Запись занятой даты в словарь
+                self.recordDuty(self.concatenateString, self.Time)  # Вызов функции записи данных
 
-                    if int(self.Day) < 10:
-                        self.concatenateString = "0" + self.Day + "." + MonthNumber
+        self.textPlace.insert(tk.END,
+                              f"{(str(self.lastName)).capitalize()}\t\t  {(str(self.firstName)).capitalize()}\t\t"
+                              f"{str(self.Block) + str(self.Room)}\t\t{str(self.TelNumber)}\t\t   {str(self.concatenateString)}\t\t{str(self.Time)}\n")
 
-                    else:
-                        self.concatenateString = self.Day + "." + MonthNumber
+        self.clearEntry()
 
-                    # Запись занятой даты в словарь
-                    self.recordDuty(self.concatenateString, self.Time)  # Вызов функции записи данных
-
-
-            self.textPlace.insert(tk.END, f"{(str(self.lastName)).capitalize()}\t\t  {(str(self.firstName)).capitalize()}\t\t"
-                                        f"{str(self.Room)}\t\t{str(self.TelNumber)}\t\t   {str(self.concatenateString)}\t\t{str(self.Time)}\n")
-
-            self.comboboxMonth.config(state="normal")
-            self.comboboxDay.config(state="normal")
-            self.comboboxTime.config(state="normal")
-
-            self.entry1.delete(0, tk.END)
-            self.entry2.delete(0, tk.END)
-            self.entry3.delete(0, tk.END)
-            self.entry4.delete(0, tk.END)
-            self.comboboxMonth.delete(0, tk.END)
-            self.comboboxDay.delete(0, tk.END)
-            self.comboboxTime.delete(0, tk.END)
-
-            self.comboboxMonth.config(state="readonly")
-            self.comboboxDay.config(state="readonly")
-            self.comboboxTime.config(state="readonly")
-
-        self.textPlace.config(state = 'disabled')
+        self.textPlace.config(state='disabled')
 
     #Функция для изменения чисел при выборе месяца
     def UpdateDays(self, event):
+
         self.comboboxDay.set("")
         self.monthUser = self.comboboxMonth.get()
         self.days = []
+
         for month, date in self.dictForMonthDays.items():
             if self.monthUser == month:
                 for i in range(1, date + 1):
                     self.days.append(str(i))
+
         self.comboboxDay['values'] = self.days
         self.comboboxTime['values'] = self.comboboxTimeValues  # Сброс значений времени
 
     #Combobox Day Selected
     def getInfoComboboxDay(self, event):
+
         stringForDay = self.comboboxDay.get()
+
         for nameOfMonth, MonthNumber in self.DictForMonthes.items():
+
             if self.monthUser == nameOfMonth:
+
                 if int(stringForDay) < 10:
                     self.FullConcatenate = "0" + stringForDay + "." + MonthNumber
+
                 else:
                     self.FullConcatenate = stringForDay + "." + MonthNumber
+
         if self.FullConcatenate in self.dictZapisanye:
+
             reserved_times = self.dictZapisanye[self.FullConcatenate]
             available_times = [time for time in self.comboboxTimeValues if time not in reserved_times]
             self.comboboxTime['values'] = available_times
+
         else:
             self.comboboxTime['values'] = self.comboboxTimeValues
 
@@ -518,7 +511,174 @@ class MyApp(tk.Tk):
 
         self.textPlace.config(state='disabled')
 
+    #Открывает окно выбора сортировки
+    def chooseSort(self):
+
+        SortWindow(self.frameMain, self)
+
     #---------------------------------------------------------------------------------------------------------------ФУНКЦИИ
+
+
+# Класс для создания окна выбора сортировки
+class SortWindow():
+
+    def __init__(self, frame, parent):
+
+        self.parent = parent
+
+        self.sortWindow = tk.Toplevel(frame)
+
+        self.sortWindow.title("Выбор сортировки")
+        self.sortWindow.geometry("500x500")
+        self.sortWindow.geometry('+700+300')
+
+        self.canvasSort1 = tk.Canvas(self.sortWindow, width=150, height=500, bg="#9681F0")
+        self.canvasSort1.place(x=0, y=0)
+
+        self.canvasSort2 = tk.Canvas(self.sortWindow, width=350, height=3, bg="#bcbbbd")
+        self.canvasSort2.place(x=153, y=55)
+
+        self.canvasSort3 = tk.Canvas(self.sortWindow, width=350, height=3, bg="#bcbbbd")
+        self.canvasSort3.place(x=153, y=355)
+
+        # ------------------------------------------------------------------КАРТИНКИ
+
+        self.imageSort5 = tk.PhotoImage(file='images\\sort5.png')
+        self.imageSort4 = tk.PhotoImage(file='images\\sort4.png')
+        self.imageSort6 = tk.PhotoImage(file='images\\btnSort.png')
+        self.imageBack2 = tk.PhotoImage(file='images\\back2.png')
+
+        # ------------------------------------------------------------------КАРТИНКИ
+
+        # ------------------------------------------------------------------ЛЕЙБЛЫ
+
+        self.labelSort5 = MyLabel(self.sortWindow, image=self.imageSort5, bg="#9681F0", x=30, y=220)
+        self.labelSort5.image = self.imageSort5
+
+        self.labelSort4 = MyLabel(self.sortWindow, image=self.imageSort4, bg="#9681F0", x=30, y=100)
+        self.labelSort4.image = self.imageSort4
+
+        self.label28 = MyLabel(self.sortWindow, text="Выберите способ сортировки", x=210, y=20, font_weight='bold')
+
+        self.label29 = MyLabel(self.sortWindow, text="(пример сортировки)", x=260, y=320, font_size=8)
+
+        # ------------------------------------------------------------------ЛЕЙБЛЫ
+
+        # ------------------------------------------------------------------КОМБОБОКСЫ
+
+        self.comboboxSort = ttk.Combobox(self.sortWindow, values=['В алфавитном порядке', 'По возрастанию блоков',
+                                                                  'По убыванию блоков', 'По дате'], width=30,
+                                         font=('Montserrat', 10, 'bold'))
+        self.comboboxSort.place(x=200, y=80)
+        self.comboboxSort.bind("<<ComboboxSelected>>", self.uploadExamples)
+
+        # ------------------------------------------------------------------КОМБОБОКСЫ
+
+        # ------------------------------------------------------------------КНОПКИ
+
+        self.buttonSort = MyButton(self.sortWindow, text='Отсортировать', width=15, height=2,
+                                   font_size=9, font_weight='bold', x=200, y=400, command=self.funcOfSort)
+
+        self.buttonBack = MyButton(self.sortWindow, text='Назад', width=100, height=30, image=self.imageBack2,
+                                   compound=tk.RIGHT, font_size=9, font_weight='bold', command=self.closeWindow,
+                                   x=350, y=400)
+
+        # ------------------------------------------------------------------КНОПКИ
+
+        self.textExampleSort = tk.Text(self.sortWindow, width=50, height=13, font=("Montserrat", 8, 'bold'))
+        self.textExampleSort.place(x=170, y=130)
+
+        self.textExampleSort.config(state='disabled')
+
+    # Обновление примеров для сортировки
+    def uploadExamples(self, event):
+
+        self.textExampleSort.config(state='normal')
+
+        self.textExampleSort.delete("0.0", tk.END)
+
+        self.textExampleSort.insert("end", "\n\n")
+
+        self.selectedSort = self.comboboxSort.get()
+
+        self.checkIsEntry()
+
+        if (self.selectedSort == "В алфавитном порядке"):
+
+            self.textExampleSort.insert('0.0', "До")
+
+            self.textExampleSort.insert("end", "- Жоров\n- Ловчиновский\n- Бататкин\n\n")
+            self.textExampleSort.insert("end", "После\n\n")
+            self.textExampleSort.insert("end", "- Бататкин\n- Жоров\n- Ловчиновский")
+
+            self.textExampleSort.config(state='disabled')
+
+        elif (self.selectedSort == "По возрастанию блоков"):
+
+            self.textExampleSort.insert('0.0', "До")
+
+            self.textExampleSort.insert("end", "- Жоров 513А\n- Бататкин 610Б\n- Ловчиновский 235A\n\n")
+            self.textExampleSort.insert("end", "После\n\n")
+            self.textExampleSort.insert("end", "- Ловчиновский 235А\n- Жоров 513А\n- Бататкин 610Б")
+
+            self.textExampleSort.config(state='disabled')
+
+        elif (self.selectedSort == "По убыванию блоков"):
+
+            self.textExampleSort.insert('0.0', "До")
+
+            self.textExampleSort.insert("end", "- Жоров 513А\n- Бататкин 610Б\n- Ловчиновский 235A\n\n")
+            self.textExampleSort.insert("end", "После\n\n")
+            self.textExampleSort.insert("end", "- Бататкин 610Б\n- Жоров 513А\n- Ловчиновский 235А")
+
+            self.textExampleSort.config(state='disabled')
+
+        elif (self.selectedSort == "По дате"):
+
+            self.textExampleSort.insert('0.0', "До")
+
+            self.textExampleSort.insert("end",
+                                        "- Жоров 01.04.2025\n- Бататкин 10.01.2025\n- Ловчиновский 24.05.2025\n\n")
+            self.textExampleSort.insert("end", "После\n\n")
+            self.textExampleSort.insert("end", "- Бататкин 10.01.2025\n- Жоров 01.04.2025\n- Ловчиновский 24.05.2025")
+
+            self.textExampleSort.config(state='disabled')
+
+    # Закрытие окна
+    def closeWindow(self):
+        self.sortWindow.destroy()
+
+    # Проверка не пустой ли комбобокс
+    def checkIsEntry(self):
+
+        if (self.comboboxSort.get()):
+
+            self.comboboxSort.config(state='readonly')
+
+            return True
+
+        else:
+            return False
+
+    # Сортировка по возрастанию блоков
+    #def sortBlocksUp(self):
+
+    #Функция которая проверяет не одна ли строка в тексте (для сортировки нужно минимум 2)
+    def checkIsNoOneLine(self):
+        listsd = self.parent.textPlace.get()
+
+        
+
+    #Функция сортировки
+    def funcOfSort(self):
+
+        resChecking = self.checkIsEntry()
+
+        if not resChecking:
+            # parent для того, чтобы при вызове ошибки sortWindow не закрывалось
+            messagebox.showerror("Ошибка", "Выберите способ сортировки!", parent=self.sortWindow)
+
+        # Здесь сама сортировка через else (просто напиши else и там вызывай функции сортировки)
 
 app = MyApp()
 app.mainloop()

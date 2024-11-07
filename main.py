@@ -738,6 +738,10 @@ class SortWindow():
 
                     self.sortDownBlocks()
 
+                elif self.selectedSort == "В алфавитном порядке":
+
+                    self.sortByAlphabet()
+
     #Функция сортировки по возрастанию блоков
     def sortUpBlocks(self):
         # Ключ - блок, значение - индекс до сортировки
@@ -748,13 +752,8 @@ class SortWindow():
             indexOfBlock = self.parent.recordBlocks.index(i)
             dictForBlockIndexes[i] = indexOfBlock
 
-        #print(dictForBlockIndexes)
-
         # Сортировка блоков и создание нового отсортированного списка
         sortedUpBlocks = sorted(self.parent.recordBlocks)
-
-
-        #print(dictForBlockIndexesSorted)
 
         # Очищаем textPlace
         self.parent.textPlace.config(state='normal')
@@ -782,12 +781,8 @@ class SortWindow():
             indexOfBlock = self.parent.recordBlocks.index(i)
             dictForBlockIndexes[i] = indexOfBlock
 
-        #print(dictForBlockIndexes)
-
         # Сортировка блоков и создание нового отсортированного списка
         sortedDownBlocks = sorted(self.parent.recordBlocks, reverse = True)
-
-        #print(dictForBlockIndexesSorted)
 
         # Очищаем textPlace
         self.parent.textPlace.config(state='normal')
@@ -799,6 +794,19 @@ class SortWindow():
             indexInOriginal = dictForBlockIndexes[block]
             fullString = self.parent.recordFullStrings[indexInOriginal]
             self.parent.textPlace.insert(tk.END, fullString)
+
+        self.parent.textPlace.config(state='disabled')
+
+    #Сортировка в алфавитном порядке
+    def sortByAlphabet(self):
+
+        sortedAlphabetical = "".join(sorted(self.parent.recordFullStrings))
+
+        self.parent.textPlace.config(state='normal')
+        self.parent.textPlace.delete('3.0', tk.END)
+        self.parent.textPlace.insert('2.0', "\n")
+
+        self.parent.textPlace.insert(tk.END, sortedAlphabetical)
 
         self.parent.textPlace.config(state='disabled')
 

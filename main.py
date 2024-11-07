@@ -9,6 +9,8 @@
 '''Добавить год. При возможности реализовать штуку с пересылкой данных к примеру в ворд файл (типо кнопка отослать коменданту).
 В будущем добавлю сортировки.'''
 
+'''Очищать еще нужно словарь дат записи при удалении данных. Тк я данные к примеру удалил а все равно время конкретного дня исчезло. Очищай словарь'''
+
 import tkinter as tk
 from tkinter import ttk
 from tkinter import messagebox
@@ -71,6 +73,13 @@ class MyApp(tk.Tk):
         self.concatenateString = ""
         self.monthUser = ""
 
+        self.fullStringSort = ""
+
+        #Для сортировки
+        self.recordBlocks = []
+        self.recordSecondNames = []
+        #self.recordDate = [] позже реализую
+        self.recordFullStrings = []
 
         #Фрейм самого первого Splash окна
         self.frame1 = tk.Frame(self, width = 800, height = 800)
@@ -444,11 +453,19 @@ class MyApp(tk.Tk):
                 # Запись занятой даты в словарь
                 self.recordDuty(self.concatenateString, self.Time)  # Вызов функции записи данных
 
-        self.textPlace.insert(tk.END,
-                              f"{(str(self.lastName)).capitalize()}\t\t  {(str(self.firstName)).capitalize()}\t\t"
+        #Для сортировки
+        self.fullStringSort = (f"{(str(self.lastName)).capitalize()}\t\t  {(str(self.firstName)).capitalize()}\t\t"
                               f"{str(self.Block) + str(self.Room)}\t\t{str(self.TelNumber)}\t\t   {str(self.concatenateString)}\t\t{str(self.Time)}\n")
 
+        self.textPlace.insert(tk.END,f"{(str(self.lastName)).capitalize()}\t\t  {(str(self.firstName)).capitalize()}\t\t"
+                              f"{str(self.Block) + str(self.Room)}\t\t{str(self.TelNumber)}\t\t   {str(self.concatenateString)}\t\t{str(self.Time)}\n")
+
+
+
         self.clearEntry()
+
+        #Для сортировки
+        self.recordData()
 
         self.textPlace.config(state='disabled')
 
@@ -499,6 +516,15 @@ class MyApp(tk.Tk):
         else:
             self.dictZapisanye[date] = [time]
 
+    #Запись данных в списки (типо для блоков к примеру свой отдельный список и тд) (для реализации сортировки)
+    def recordData(self):
+
+        self.recordBlocks.append(self.Block)
+        self.recordSecondNames.append(self.lastName)
+        self.recordFullStrings.append(self.fullStringSort)
+
+
+
     #Удаление всех данных
     def deleteAllData(self):
 
@@ -507,9 +533,16 @@ class MyApp(tk.Tk):
         result = tk.messagebox.askyesno('Удаление данных', 'Все данные о дежурстве будут безвозвратно удалены.\nПродолжить?')
 
         if result:
-            self.textPlace.delete('2.0',tk.END)
+            self.textPlace.delete('3.0',tk.END)
+            self.textPlace.insert('2.0', '\n')
+
 
         self.textPlace.config(state='disabled')
+
+        self.recordBlocks.clear()
+        self.recordSecondNames.clear()
+        self.recordFullStrings.clear()
+
 
     #Открывает окно выбора сортировки
     def chooseSort(self):
@@ -517,7 +550,6 @@ class MyApp(tk.Tk):
         SortWindow(self.frameMain, self)
 
     #---------------------------------------------------------------------------------------------------------------ФУНКЦИИ
-
 
 # Класс для создания окна выбора сортировки
 class SortWindow():
@@ -648,7 +680,7 @@ class SortWindow():
     def closeWindow(self):
         self.sortWindow.destroy()
 
-    # Проверка не пустой ли комбобокс
+    # Проверка не пустой ли комбобокс в сортировке
     def checkIsEntry(self):
 
         if (self.comboboxSort.get()):
@@ -665,9 +697,21 @@ class SortWindow():
 
     #Функция которая проверяет не одна ли строка в тексте (для сортировки нужно минимум 2)
     def checkIsNoOneLine(self):
-        listsd = self.parent.textPlace.get()
 
-        
+        numberLines = int(self.parent.textPlace.index("end-1c").split(".")[0])
+
+
+        #Ну типо просто проверил считается ли кол-во строк
+        if(numberLines >= 5):
+
+            messagebox.showinfo("Результат", "Успешно!", parent = self.sortWindow)
+
+            return True
+
+        else:
+            messagebox.showerror("Ошибка", "Недостаточно записей для сортировки\n(минимум 2)", parent = self.sortWindow)
+
+            return False
 
     #Функция сортировки
     def funcOfSort(self):
@@ -679,6 +723,87 @@ class SortWindow():
             messagebox.showerror("Ошибка", "Выберите способ сортировки!", parent=self.sortWindow)
 
         # Здесь сама сортировка через else (просто напиши else и там вызывай функции сортировки)
+        elif resChecking:
+
+            NoOneLine = self.checkIsNoOneLine()
+
+            #Здесь вызываем функции сортировки
+            if NoOneLine:
+
+                if self.selectedSort == "По возрастанию блоков":
+
+                    self.sortUpBlocks()
+
+                elif self.selectedSort == "По убыванию блоков":
+
+                    self.sortDownBlocks()
+
+    #Функция сортировки по возрастанию блоков
+    def sortUpBlocks(self):
+        # Ключ - блок, значение - индекс до сортировки
+        dictForBlockIndexes = {}
+
+
+        for i in self.parent.recordBlocks:
+            indexOfBlock = self.parent.recordBlocks.index(i)
+            dictForBlockIndexes[i] = indexOfBlock
+
+        #print(dictForBlockIndexes)
+
+        # Сортировка блоков и создание нового отсортированного списка
+        sortedUpBlocks = sorted(self.parent.recordBlocks)
+
+
+        #print(dictForBlockIndexesSorted)
+
+        # Очищаем textPlace
+        self.parent.textPlace.config(state='normal')
+        self.parent.textPlace.delete('3.0', tk.END)
+        self.parent.textPlace.insert('2.0', "\n")
+
+        # Вставляем отсортированные строки в textPlace
+        for block in sortedUpBlocks:
+
+            indexInOriginal = dictForBlockIndexes[block]
+
+            fullString = self.parent.recordFullStrings[indexInOriginal]
+
+            self.parent.textPlace.insert(tk.END, fullString)
+
+        self.parent.textPlace.config(state='disabled')
+
+    #Функция сортировки по возрастанию блоков
+    def sortDownBlocks(self):
+        # Ключ - блок, значение - индекс до сортировки
+        dictForBlockIndexes = {}
+
+        for i in self.parent.recordBlocks:
+
+            indexOfBlock = self.parent.recordBlocks.index(i)
+            dictForBlockIndexes[i] = indexOfBlock
+
+        #print(dictForBlockIndexes)
+
+        # Сортировка блоков и создание нового отсортированного списка
+        sortedDownBlocks = sorted(self.parent.recordBlocks, reverse = True)
+
+        #print(dictForBlockIndexesSorted)
+
+        # Очищаем textPlace
+        self.parent.textPlace.config(state='normal')
+        self.parent.textPlace.delete('3.0', tk.END)
+        self.parent.textPlace.insert('2.0', "\n")
+
+        # Вставляем отсортированные строки в textPlace
+        for block in sortedDownBlocks:
+            indexInOriginal = dictForBlockIndexes[block]
+            fullString = self.parent.recordFullStrings[indexInOriginal]
+            self.parent.textPlace.insert(tk.END, fullString)
+
+        self.parent.textPlace.config(state='disabled')
+
+
+
 
 app = MyApp()
 app.mainloop()

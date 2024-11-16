@@ -14,38 +14,64 @@
 import tkinter as tk
 from tkinter import ttk
 from tkinter import messagebox
-import threading
+import time
 
-#Класс для Label
+
+# Класс для Label
 class MyLabel(tk.Label):
 
-    def __init__(self, master, text = None, x = 0, y = 0, font_size=12, font_weight="normal", justify="left", bg="#f0f0f0", image = None, **kwargs):
-
+    def __init__(self, master, text=None, x=0, y=0, font_size=12, font_weight="normal", justify="left", bg="#f0f0f0",
+                 image=None, **kwargs):
         font = ("Montserrat", font_size, font_weight)
 
-        super().__init__(master, text = text, font = font, justify = justify, bg = bg, image = image, **kwargs)
+        super().__init__(master, text=text, font=font, justify=justify, bg=bg, image=image, **kwargs)
         self.place(x=x, y=y)
 
-#Класс для кнопки
+
+# Класс для кнопки
 class MyButton(tk.Button):
 
-    def __init__(self, master, text, width, height, fg = "#000000", bg = "#f0f0f0", image = None, compound = None, font_size = 9, font_weight = "normal", command = None, x = 0, y = 0, **kwargs):
-
+    def __init__(self, master, text, width, height, fg="#000000", bg="#f0f0f0", image=None, compound=None, font_size=9,
+                 font_weight="normal", command=None, x=0, y=0, **kwargs):
         font = ("Montserrat", font_size, font_weight)
 
-        super().__init__(master, text=text, font = font, width = width, height = height, fg = fg, bg = bg, image = image, compound = compound, command = command, **kwargs)
-        self.place(x = x, y = y)
+        super().__init__(master, text=text, font=font, width=width, height=height, fg=fg, bg=bg, image=image,
+                         compound=compound, command=command, **kwargs)
+        self.place(x=x, y=y)
 
 
+class Inactivity():
+    def __init__(self, frame):
+        self.frame = frame
+        self.lastActivityTime = time.time()
+        self.setupBindings() #Обработчик событий
+        self.checkInactivity() #Проверка на неактивость
+
+    def resetTime(self, event):
+        self.lastActivityTime = time.time()
+
+    def setupBindings(self):
+        self.frame.bind_all('<Any-KeyPress>', self.resetTime)
+        self.frame.bind_all('<Any-Button>', self.resetTime)
+
+    def checkInactivity(self):
+
+        currentTime = time.time()
+        timeDuration = currentTime - self.lastActivityTime
+
+        print(f"Inactivity duration: {timeDuration} seconds")
+
+        if timeDuration >= 10:
+            self.showWarning()
+
+        # Проверка на неактивность каждые 1000 миллисекунд (1 секунда)
+        self.frame.after(1000, self.checkInactivity)
+
+    def showWarning(self):
+        messagebox.showwarning("Бездействие", "Вы афк 60 секунд")
 
 
-
-
-
-'''class Inactivity():
-    def __init__(self):'''
-
-#Класс приложения
+# Класс приложения
 class MyApp(tk.Tk):
 
     def __init__(self):
@@ -55,9 +81,9 @@ class MyApp(tk.Tk):
         self.title("Учет дежурств")
         self.geometry('800x800')
         self.geometry('+500+100')
-        self.resizable(width = False, height = False)
+        self.resizable(width=False, height=False)
 
-        #Словарь для хранения записанных дат
+        # Словарь для хранения записанных дат
         self.dictZapisanye = {}
 
         # Для перевода из слова в номер месяца
@@ -69,123 +95,141 @@ class MyApp(tk.Tk):
         self.stringMonthNum = ""
         self.FullConcatenate = ""
 
-        #Нужно
+        # Нужно
         self.concatenateString = ""
         self.monthUser = ""
 
         self.fullStringSort = ""
 
-        #Для сортировки
+        # Для сортировки
         self.recordBlocks = []
         self.recordSecondNames = []
-        #self.recordDate = [] позже реализую
+        #self.recordDate = []
+        self.recordDays = []
+        self.recordMonthes = []
         self.recordFullStrings = []
 
-        #Фрейм самого первого Splash окна
-        self.frame1 = tk.Frame(self, width = 800, height = 800)
-        self.frame1.place(x = 0, y = 0)
+        # Фрейм самого первого Splash окна
+        self.frame1 = tk.Frame(self, width=800, height=800)
+        self.frame1.place(x=0, y=0)
 
-        #Фрейм второго (основного окна)
-        self.frameMain = tk.Frame(self, width = 800, height = 800)
+        # Фрейм второго (основного окна)
+        self.frameMain = tk.Frame(self, width=800, height=800)
 
-        #Фрейм для окна об авторе
-        self.frameAuthor = tk.Frame(self, width = 800, height = 800)
 
-        self.frameAbtProgramm = tk.Frame(self, width = 800, height = 800)
 
-        self.canvasAbtProgramm = tk.Canvas(self.frameAbtProgramm, width = 300, height = 800, bg = '#9681F0')
-        self.canvasAbtProgramm.place(x = 0, y = 0)
+        # Фрейм для окна об авторе
+        self.frameAuthor = tk.Frame(self, width=800, height=800)
 
-        self.canvas1 = tk.Canvas(self.frameMain, width=750, height=600, bg='#eedcfc', borderwidth = 2, relief = 'solid')
+        self.frameAbtProgramm = tk.Frame(self, width=800, height=800)
+
+        self.canvasAbtProgramm = tk.Canvas(self.frameAbtProgramm, width=300, height=800, bg='#9681F0')
+        self.canvasAbtProgramm.place(x=0, y=0)
+
+        self.canvas1 = tk.Canvas(self.frameMain, width=750, height=600, bg='#eedcfc', borderwidth=2, relief='solid')
         self.canvas1.place(x=0, y=50)
 
-        self.textPlace = tk.Text(self.frameMain, state = 'normal', font = ("Montserrat", 8, 'bold'))
+        self.textPlace = tk.Text(self.frameMain, state='normal', font=("Montserrat", 8, 'bold'))
         self.textPlace.place(x=20, y=210, width=600, height=400)
         self.textPlace.insert(tk.END, f"Фамилия\t\t  Имя\t\tБлок\t\tTелефон\t\t   Дата\t\tВремя\n\n")
-        self.textPlace.config(state = 'disabled')
-      
-        #Лейблы с текстом Splash окна
-        self.label1 = MyLabel(self.frame1, text = 'Белорусский национальный технический университет', x = 195, y = 20)
+        self.textPlace.config(state='disabled')
 
-        self.label2 = MyLabel(self.frame1, text = 'Факультет информационных технологий и робототехники', x = 175, y = 50)
+        # Лейблы с текстом Splash окна
+        self.label1 = MyLabel(self.frame1, text='Белорусский национальный технический университет', x=195, y=20)
 
+        self.label2 = MyLabel(self.frame1, text='Факультет информационных технологий и робототехники', x=175, y=50)
 
-        self.label3 = MyLabel(self.frame1, text = 'Кафедра программного обеспечения информационных систем и технологий', x = 120, y = 80)
+        self.label3 = MyLabel(self.frame1, text='Кафедра программного обеспечения информационных систем и технологий',
+                              x=120, y=80)
 
-        self.label4 = MyLabel(self.frame1, text='Курсовой проект',font_size=16, font_weight = 'bold', x = 300, y = 160)
+        self.label4 = MyLabel(self.frame1, text='Курсовой проект', font_size=16, font_weight='bold', x=300, y=160)
 
-        self.label5 = MyLabel(self.frame1, text='По дисциплине "Языки программирования"', font_size=16, font_weight='bold', x = 160, y = 200)
+        self.label5 = MyLabel(self.frame1, text='По дисциплине "Языки программирования"', font_size=16,
+                              font_weight='bold', x=160, y=200)
 
-        self.label6 = MyLabel(self.frame1, text='Выполнил: студент группы 10701123',font_size = 12, font_weight = 'bold', x = 340, y = 360)
+        self.label6 = MyLabel(self.frame1, text='Выполнил: студент группы 10701123', font_size=12, font_weight='bold',
+                              x=340, y=360)
 
-        self.label7 = MyLabel(self.frame1, text='Жоров Евгений Александрович', font_size = 12, font_weight = 'bold', x = 340, y = 390)
+        self.label7 = MyLabel(self.frame1, text='Жоров Евгений Александрович', font_size=12, font_weight='bold', x=340,
+                              y=390)
 
-        self.label8 = MyLabel(self.frame1, text = 'Преподаватель: к.ф.-м.н., доц.', font_size=12, font_weight='bold', x = 340, y = 450)
+        self.label8 = MyLabel(self.frame1, text='Преподаватель: к.ф.-м.н., доц.', font_size=12, font_weight='bold',
+                              x=340, y=450)
 
-        self.label9 = MyLabel(self.frame1, text = 'Сидорик Валерий Владимирович', font_size=12, font_weight='bold', x = 340, y = 480)
+        self.label9 = MyLabel(self.frame1, text='Сидорик Валерий Владимирович', font_size=12, font_weight='bold', x=340,
+                              y=480)
 
-        self.label10 = MyLabel(self.frame1, text = 'Минск 2024', font_size=12, font_weight='bold', x = 350, y = 630)
+        self.label10 = MyLabel(self.frame1, text='Минск 2024', font_size=12, font_weight='bold', x=350, y=630)
 
-        self.label11 = MyLabel(self.frame1, text = 'Учет дежурств в общежитии',font_size=16, font_weight='bold', x = 235, y = 240)
+        self.label11 = MyLabel(self.frame1, text='Учет дежурств в общежитии', font_size=16, font_weight='bold', x=235,
+                               y=240)
 
-        #Лейблы с текстом окна об авторе
-        self.label12 = MyLabel(self.frameAuthor, text = 'Автор', font_size=14, font_weight='bold', x = 350, y = 470)
+        # Лейблы с текстом окна об авторе
+        self.label12 = MyLabel(self.frameAuthor, text='Автор', font_size=14, font_weight='bold', x=350, y=470)
 
-        self.label13 = MyLabel(self.frameAuthor, text = 'Студент группы 10701123', font_size=12, font_weight='bold', x = 280, y = 500)
+        self.label13 = MyLabel(self.frameAuthor, text='Студент группы 10701123', font_size=12, font_weight='bold',
+                               x=280, y=500)
 
-        self.label14 = MyLabel(self.frameAuthor, text = 'Жоров Евгений Александрович', font_size=12, font_weight='bold', x = 260, y = 530)
+        self.label14 = MyLabel(self.frameAuthor, text='Жоров Евгений Александрович', font_size=12, font_weight='bold',
+                               x=260, y=530)
 
-        self.label15 = MyLabel(self.frameAuthor, text = 'vanasokolov844@gmail.com', font_size=12, font_weight='bold', x = 270, y = 560)
+        self.label15 = MyLabel(self.frameAuthor, text='vanasokolov844@gmail.com', font_size=12, font_weight='bold',
+                               x=270, y=560)
 
-        #Лейблы для текста окна о программе
-        self.label16 = MyLabel(self.frameAbtProgramm, text='Учет дежурств в общежитии', font_size=18, font_weight='bold', x = 380, y = 40)
+        # Лейблы для текста окна о программе
+        self.label16 = MyLabel(self.frameAbtProgramm, text='Учет дежурств в общежитии', font_size=18,
+                               font_weight='bold', x=380, y=40)
 
-        self.label17 = MyLabel(self.frameAbtProgramm, text = 'Программа позволяет:', font_size=13, font_weight='bold', x = 440, y = 90)
+        self.label17 = MyLabel(self.frameAbtProgramm, text='Программа позволяет:', font_size=13, font_weight='bold',
+                               x=440, y=90)
 
-        self.label18 = MyLabel(self.frameAbtProgramm, text = '1. Записывать ФИО и номер телефона дежурного\n'
-                                                         '2. Сохранять записи в файл\n'
-                                                         '3. Просматривать результат в главном окне\n'
-                                                         '4. Удалять данные о дежурстве\n'
-                                                         '5. Записывать и считывать данные с Excel', font_size=11, justify = 'left', bg = '#eddcfc', x = 350, y = 130)
+        self.label18 = MyLabel(self.frameAbtProgramm, text='1. Записывать ФИО и номер телефона дежурного\n'
+                                                           '2. Сохранять записи в файл\n'
+                                                           '3. Просматривать результат в главном окне\n'
+                                                           '4. Удалять данные о дежурстве\n'
+                                                           '5. Записывать и считывать данные с Excel', font_size=11,
+                               justify='left', bg='#eddcfc', x=350, y=130)
 
-        self.label19 = MyLabel(self.frameAbtProgramm, text = 'Версия: 1.0.0.2024', font_size=10, x = 350, y = 710)
+        self.label19 = MyLabel(self.frameAbtProgramm, text='Версия: 1.0.0.2024', font_size=10, x=350, y=710)
 
-        #Лейблы с текстом главного окна
-        self.label20 = MyLabel(self.frameMain, text = "Данные о жильцах", font_size=11, font_weight='bold', bg = '#eedcfc', x = 300, y = 15)
+        # Лейблы с текстом главного окна
+        self.label20 = MyLabel(self.frameMain, text="Данные о жильцах", font_size=11, font_weight='bold', bg='#eedcfc',
+                               x=300, y=15)
 
-        self.label21 = MyLabel(self.frameMain, text="Фамилия", font_size=10, bg='#eedcfc', x = 20, y = 70)
+        self.label21 = MyLabel(self.frameMain, text="Фамилия", font_size=10, bg='#eedcfc', x=20, y=70)
 
-        self.label22 = MyLabel(self.frameMain, text="Имя", font_size=10, bg='#eedcfc', x = 150, y = 70)
+        self.label22 = MyLabel(self.frameMain, text="Имя", font_size=10, bg='#eedcfc', x=150, y=70)
 
-        self.label23 = MyLabel(self.frameMain, text="Блок", font_size=10, bg='#eedcfc', x = 280, y = 70)
+        self.label23 = MyLabel(self.frameMain, text="Блок", font_size=10, bg='#eedcfc', x=280, y=70)
 
-        self.label24 = MyLabel(self.frameMain, text="Номер телефона", font_size=10, bg='#eedcfc', x = 400, y = 140)
+        self.label24 = MyLabel(self.frameMain, text="Номер телефона", font_size=10, bg='#eedcfc', x=400, y=140)
 
-        self.label24 = MyLabel(self.frameMain, text="Время", font_size=10, bg='#eedcfc', x = 280, y = 140)
+        self.label24 = MyLabel(self.frameMain, text="Время", font_size=10, bg='#eedcfc', x=280, y=140)
 
-        self.label25 = MyLabel(self.frameMain, text="Месяц",font_size=10, bg='#eedcfc', x = 20, y = 140)
+        self.label25 = MyLabel(self.frameMain, text="Месяц", font_size=10, bg='#eedcfc', x=20, y=140)
 
-        self.label26 = MyLabel(self.frameMain, text="День", font_size=10, bg='#eedcfc', x = 150, y = 140)
+        self.label26 = MyLabel(self.frameMain, text="День", font_size=10, bg='#eedcfc', x=150, y=140)
 
-        self.label27 = MyLabel(self.frameMain, text="Комната", font_size=10, bg='#eedcfc', x = 400, y = 70)
+        self.label27 = MyLabel(self.frameMain, text="Комната", font_size=10, bg='#eedcfc', x=400, y=70)
 
-        #Entry поля на главном окне
-        #Ввод фамилии
-        self.entry1 = tk.Entry(self.frameMain, width = 15)
-        self.entry1.place(x = 20, y = 100)
+        self.label28 = MyLabel(self.frameMain, text="Год", font_size=10, bg='#eedcfc', x=530, y=70)
 
-        #Ввод имени
+        # Entry поля на главном окне
+        # Ввод фамилии
+        self.entry1 = tk.Entry(self.frameMain, width=15)
+        self.entry1.place(x=20, y=100)
+
+        # Ввод имени
         self.entry2 = tk.Entry(self.frameMain, width=15)
         self.entry2.place(x=150, y=100)
 
-        #Ввод блока
+        # Ввод блока
         self.entry3 = tk.Entry(self.frameMain, width=10)
         self.entry3.place(x=280, y=100)
 
-        #Ввод номера тф
+        # Ввод номера тф
         self.entry4 = tk.Entry(self.frameMain, width=18)
         self.entry4.place(x=400, y=170)
-
 
         self.dictForMonthDays = {"Январь": 31,
                                  "Февраль": 28,  # Простой год
@@ -200,11 +244,12 @@ class MyApp(tk.Tk):
                                  "Ноябрь": 30,
                                  "Декабрь": 31}
 
-        #Ввод месяца
+        # Ввод месяца
         self.comboboxMonth = ttk.Combobox(self.frameMain, values=['Январь', 'Февраль', 'Март',
                                                                   'Апрель', 'Май', 'Июнь',
                                                                   'Июль', 'Август', 'Сентябрь',
-                                                                  'Октябрь', 'Ноябрь', 'Декабрь'], width=12, state="readonly")
+                                                                  'Октябрь', 'Ноябрь', 'Декабрь'], width=12,
+                                          state="readonly")
         self.comboboxMonth.place(x=20, y=170)
         self.comboboxMonth.bind("<<ComboboxSelected>>", self.UpdateDays)
 
@@ -213,172 +258,204 @@ class MyApp(tk.Tk):
         self.comboboxDay.place(x=150, y=170)
         self.comboboxDay.bind("<<ComboboxSelected>>", self.getInfoComboboxDay)
 
-        self.comboboxTimeValues = ['8.00 - 10.30','10.30 - 13.00','13.00 - 15.30','15.30 - 18.00','18.00 - 20.00']
+        self.comboboxTimeValues = ['8.00 - 10.30', '10.30 - 13.00', '13.00 - 15.30', '15.30 - 18.00', '18.00 - 20.00']
 
-        #Ввод времени
-        self.comboboxTime = ttk.Combobox(self.frameMain, values = self.comboboxTimeValues, width = 11, state="readonly")
-        self.comboboxTime.place(x = 280, y = 170)
+        # Ввод времени
+        self.comboboxTime = ttk.Combobox(self.frameMain, values=self.comboboxTimeValues, width=11, state="readonly")
+        self.comboboxTime.place(x=280, y=170)
 
-        #Ввод комнаты
-        self.comboboxRoomInBlock = ttk.Combobox(self.frameMain, values = ['А', 'Б'], width = 11, state = 'readonly')
-        self.comboboxRoomInBlock.place(x = 400, y = 100)
+        # Ввод комнаты
+        self.comboboxRoomInBlock = ttk.Combobox(self.frameMain, values=['А', 'Б'], width=11, state='readonly')
+        self.comboboxRoomInBlock.place(x=400, y=100)
 
-        #---------------------------------------------------------------------------------------КАРТИНКИ
-        self.imageDormitory = tk.PhotoImage(file = 'images//iconDormitory.png')
-        self.labelForDormitory = MyLabel(self.frame1, image = self.imageDormitory, x = 160, y = 370)
+        self.comboboxYear = ttk.Combobox(self.frameMain, values = ['2025'], width=11, state='readonly')
+        self.comboboxYear.place(x = 530, y = 100)
+
+        # ---------------------------------------------------------------------------------------КАРТИНКИ
+        self.imageDormitory = tk.PhotoImage(file='images//iconDormitory.png')
+        self.labelForDormitory = MyLabel(self.frame1, image=self.imageDormitory, x=160, y=370)
         self.labelForDormitory.image = self.imageDormitory
-        #self.labelForDormitory.place(x = 160, y = 370)
+        # self.labelForDormitory.place(x = 160, y = 370)
 
-        self.imageMe = tk.PhotoImage(file = 'images//Me.png')
+        self.imageMe = tk.PhotoImage(file='images//Me.png')
         self.resizedImageMe = self.imageMe.subsample(3)
-        self.labelForMe = MyLabel(self.frameAuthor, image = self.resizedImageMe, x = 230, y = 30)
+        self.labelForMe = MyLabel(self.frameAuthor, image=self.resizedImageMe, x=230, y=30)
         self.labelForMe.image = self.resizedImageMe
 
-        self.imageForAbtProgramm1 = tk.PhotoImage(file = 'images//dormitory2.png')
-        self.labelForAbtProgramm1 = MyLabel(self.frameAbtProgramm, image = self.imageForAbtProgramm1, bg = "#9681F0", x = 30, y = 230)
+        self.imageForAbtProgramm1 = tk.PhotoImage(file='images//dormitory2.png')
+        self.labelForAbtProgramm1 = MyLabel(self.frameAbtProgramm, image=self.imageForAbtProgramm1, bg="#9681F0", x=30,
+                                            y=230)
         self.labelForAbtProgramm1.image = self.imageForAbtProgramm1
 
         self.imageForAbtProgramm2 = tk.PhotoImage(file='images//room.png')
-        self.labelForAbtProgramm2 = MyLabel(self.frameAbtProgramm, image= self.imageForAbtProgramm2, bg = '#9681F0', x=150, y=235)
+        self.labelForAbtProgramm2 = MyLabel(self.frameAbtProgramm, image=self.imageForAbtProgramm2, bg='#9681F0', x=150,
+                                            y=235)
         self.labelForAbtProgramm2.image = self.imageForAbtProgramm2
 
         self.imageForAbtProgramm3 = tk.PhotoImage(file='images//file.png')
-        self.labelForAbtProgramm3 = MyLabel(self.frameAbtProgramm, image= self.imageForAbtProgramm3, bg = '#9681F0', x=30, y=350)
+        self.labelForAbtProgramm3 = MyLabel(self.frameAbtProgramm, image=self.imageForAbtProgramm3, bg='#9681F0', x=30,
+                                            y=350)
         self.labelForAbtProgramm3.image = self.imageForAbtProgramm3
 
         self.imageForAbtProgramm4 = tk.PhotoImage(file='images//excel.png')
-        self.labelForAbtProgramm4 = MyLabel(self.frameAbtProgramm, image= self.imageForAbtProgramm4, bg = '#9681F0', x=150, y=350)
+        self.labelForAbtProgramm4 = MyLabel(self.frameAbtProgramm, image=self.imageForAbtProgramm4, bg='#9681F0', x=150,
+                                            y=350)
         self.labelForAbtProgramm4.image = self.imageForAbtProgramm4
 
         self.imageForAbtProgramm5 = tk.PhotoImage(file='images//human2.png')
-        self.labelForAbtProgramm5 = MyLabel(self.frameAbtProgramm, image= self.imageForAbtProgramm5, bg='#9681F0', x=30, y=460)
+        self.labelForAbtProgramm5 = MyLabel(self.frameAbtProgramm, image=self.imageForAbtProgramm5, bg='#9681F0', x=30,
+                                            y=460)
         self.labelForAbtProgramm5.image = self.imageForAbtProgramm5
 
         self.imageForAbtProgramm6 = tk.PhotoImage(file='images//telephone.png')
-        self.labelForAbtProgramm6 = MyLabel(self.frameAbtProgramm, image= self.imageForAbtProgramm6, bg='#9681F0', x=150, y=460)
+        self.labelForAbtProgramm6 = MyLabel(self.frameAbtProgramm, image=self.imageForAbtProgramm6, bg='#9681F0', x=150,
+                                            y=460)
         self.labelForAbtProgramm6.image = self.imageForAbtProgramm6
 
-        #Картинка для кнопки выйти
-        self.imageExit = tk.PhotoImage(file = 'images//exitMain.png')
+        # Картинка для кнопки выйти
+        self.imageExit = tk.PhotoImage(file='images//exitMain.png')
 
-        #Картинка для кнопки назад
-        self.imageBack = tk.PhotoImage(file = 'images//backMain.png')
+        # Картинка для кнопки назад
+        self.imageBack = tk.PhotoImage(file='images//backMain.png')
 
-        #Картинка для кнопки об авторе
-        self.imageHuman = tk.PhotoImage(file = 'images//human.png')
+        # Картинка для кнопки об авторе
+        self.imageHuman = tk.PhotoImage(file='images//human.png')
 
-        #Картинка для кнопки о программе
-        self.imageAbtProgramm = tk.PhotoImage(file = 'images//about.png')
+        # Картинка для кнопки о программе
+        self.imageAbtProgramm = tk.PhotoImage(file='images//about.png')
 
-        #Картинка для кнопки на главную
-        self.imageToTheMain = tk.PhotoImage(file = 'images//home.png')
+        # Картинка для кнопки на главную
+        self.imageToTheMain = tk.PhotoImage(file='images//home.png')
 
-        #Картинка для кнопки записаться
-        self.imageWrite = tk.PhotoImage(file = 'images//write.png')
+        # Картинка для кнопки записаться
+        self.imageWrite = tk.PhotoImage(file='images//write.png')
 
-        #Картинка для кнопки очистки
-        self.imageClear = tk.PhotoImage(file = 'images//clear.png')
+        # Картинка для кнопки очистки
+        self.imageClear = tk.PhotoImage(file='images//clear.png')
 
-        #Картинка для кнопки удалить данные
-        self.imageDelete = tk.PhotoImage(file = 'images//delete.png')
+        # Картинка для кнопки удалить данные
+        self.imageDelete = tk.PhotoImage(file='images//delete.png')
 
-        #Картинка для кнопки выбора сортировки
-        self.imageSort = tk.PhotoImage(file = 'images//sort.png')
-        #---------------------------------------------------------------------------------КАРТИНКИ
+        # Картинка для кнопки выбора сортировки
+        self.imageSort = tk.PhotoImage(file='images//sort.png')
+        # ---------------------------------------------------------------------------------КАРТИНКИ
 
-        #---------------------------------------------------------------------------------КНОПКИ
+        # ---------------------------------------------------------------------------------КНОПКИ
 
-        #Кнопка далее
-        self.buttonStart = MyButton(self.frame1, text = 'Далее', fg = 'white', width = 30, height = 3,
-                                    font_size = 9, font_weight='bold', bg = '#8251FE', command = self.openSecondWindow, x = 150, y = 700)
+        # Кнопка далее
+        self.buttonStart = MyButton(self.frame1, text='Далее', fg='white', width=30, height=3,
+                                    font_size=9, font_weight='bold', bg='#8251FE', command=self.openSecondWindow, x=150,
+                                    y=700)
 
-        #Кнопка выход
+        # Кнопка выход
         if self.frameMain:
-            self.buttonExit = MyButton(self.frameMain, text = 'Выход', width = 100, height = 30, image = self.imageExit,
-                                   compound = tk.RIGHT, font_size=9, font_weight='bold', command = self.exitApp, x = 525, y = 700)
+            self.buttonExit = MyButton(self.frameMain, text='Выход', width=100, height=30, image=self.imageExit,
+                                       compound=tk.RIGHT, font_size=9, font_weight='bold', command=self.exitApp, x=525,
+                                       y=700)
 
         if self.frame1:
-            self.buttonExit = MyButton(self.frame1, text = 'Выход', width = 200, height = 45, image = self.imageExit,
-                                       compound = tk.RIGHT, font_size=9, font_weight='bold', command = self.exitApp, x = 410, y = 700)
+            self.buttonExit = MyButton(self.frame1, text='Выход', width=200, height=45, image=self.imageExit,
+                                       compound=tk.RIGHT, font_size=9, font_weight='bold', command=self.exitApp, x=410,
+                                       y=700)
 
-        #Кнопка назад УНИВЕРСАЛЬНАЯ
+        # Кнопка назад УНИВЕРСАЛЬНАЯ
         if self.frameMain:
-            self.buttonBack = MyButton(self.frameMain, text = 'Назад', width = 100, height = 30, image = self.imageBack,
-                                       compound = tk.RIGHT, font_size=9, font_weight='bold', command = self.backFromMainto1st, x = 645, y = 700)
+            self.buttonBack = MyButton(self.frameMain, text='Назад', width=100, height=30, image=self.imageBack,
+                                       compound=tk.RIGHT, font_size=9, font_weight='bold',
+                                       command=self.backFromMainto1st, x=645, y=700)
 
         if self.frameAbtProgramm:
             self.buttonBack = MyButton(self.frameAbtProgramm, text='Назад', width=100, height=30, image=self.imageBack,
-                                       compound=tk.RIGHT,font_size=9, font_weight='bold', command=self.backFromAbtProgrammToMain, x = 645, y = 700)
+                                       compound=tk.RIGHT, font_size=9, font_weight='bold',
+                                       command=self.backFromAbtProgrammToMain, x=645, y=700)
 
-        #Кнопка об авторе (добавить потом это окно)
-        self.buttonAuthor = MyButton(self.frameMain, text = 'Об авторе', width = 100, height = 30, image = self.imageHuman,
-                                     compound = tk.RIGHT,font_size=9, font_weight='bold', command = self.openAuthorFromMain, x = 200, y = 700)
+        # Кнопка об авторе (добавить потом это окно)
+        self.buttonAuthor = MyButton(self.frameMain, text='Об авторе', width=100, height=30, image=self.imageHuman,
+                                     compound=tk.RIGHT, font_size=9, font_weight='bold',
+                                     command=self.openAuthorFromMain, x=200, y=700)
 
-        #Кнопка о программе
-        self.buttonAbtProgramm = MyButton(self.frameMain, text = 'О программе', width = 120, height = 30, image = self.imageAbtProgramm,
-                                          compound = tk.RIGHT,font_size=9, font_weight='bold', command = self.openAbtProgramm, x = 60, y = 700)
+        # Кнопка о программе
+        self.buttonAbtProgramm = MyButton(self.frameMain, text='О программе', width=120, height=30,
+                                          image=self.imageAbtProgramm,
+                                          compound=tk.RIGHT, font_size=9, font_weight='bold',
+                                          command=self.openAbtProgramm, x=60, y=700)
 
-        #Кнопка на главную
-        self.buttonToTheMain = MyButton(self.frameAuthor, text = 'На главную', width = 250, height = 30, image = self.imageToTheMain,
-                                        compound = tk.RIGHT,font_size=9, font_weight='bold', command = self.backFromAuthorToMain, x = 265, y = 700)
-        #Кнопка записаться
-        self.buttonZapisat = MyButton(self.frameMain, text = 'Записаться', width = 80, height = 60, image = self.imageWrite,
-                                      compound = tk.TOP,font_size=9, font_weight='bold', command = self.GetResults, x = 645, y = 100)
+        # Кнопка на главную
+        self.buttonToTheMain = MyButton(self.frameAuthor, text='На главную', width=250, height=30,
+                                        image=self.imageToTheMain,
+                                        compound=tk.RIGHT, font_size=9, font_weight='bold',
+                                        command=self.backFromAuthorToMain, x=265, y=700)
+        # Кнопка записаться
+        self.buttonZapisat = MyButton(self.frameMain, text='Записаться', width=80, height=60, image=self.imageWrite,
+                                      compound=tk.TOP, font_size=9, font_weight='bold', command=self.GetResults, x=645,
+                                      y=100)
 
-        #Кнопка очистить ввод
-        self.buttonClear = MyButton(self.frameMain, text = "Очистить\nввод", width = 80, height = 60, image = self.imageClear,
-                                    compound = tk.TOP,font_size=9, font_weight='bold', command = self.clearEntry, x = 645, y = 210)
+        # Кнопка очистить ввод
+        self.buttonClear = MyButton(self.frameMain, text="Очистить\nввод", width=80, height=60, image=self.imageClear,
+                                    compound=tk.TOP, font_size=9, font_weight='bold', command=self.clearEntry, x=645,
+                                    y=210)
 
-        #Кнопка удалить данные
-        self.buttonDeleteData = MyButton(self.frameMain, text = 'Удалить\nданные', width = 80, height = 60, image = self.imageDelete,
-                                         compound = tk.TOP, font_size = 9, font_weight='bold', command = self.deleteAllData, x = 645, y = 320)
+        # Кнопка удалить данные
+        self.buttonDeleteData = MyButton(self.frameMain, text='Удалить\nданные', width=80, height=60,
+                                         image=self.imageDelete,
+                                         compound=tk.TOP, font_size=9, font_weight='bold', command=self.deleteAllData,
+                                         x=645, y=320)
 
         # Кнопка выбрать сортировку
-        self.buttonChooseSort = MyButton(self.frameMain, text='Выбрать\nсортировку', width=80, height=60, image=self.imageSort,
-                                         compound=tk.TOP, font_size=9, font_weight='bold',command = self.chooseSort, x=645, y=425)
+        self.buttonChooseSort = MyButton(self.frameMain, text='Выбрать\nсортировку', width=80, height=60,
+                                         image=self.imageSort,
+                                         compound=tk.TOP, font_size=9, font_weight='bold', command=self.chooseSort,
+                                         x=645, y=425)
 
-    #-----------------------------------------------------------------------------------------------------------------КНОПКИ
+    # -----------------------------------------------------------------------------------------------------------------КНОПКИ
 
-    #-----------------------------------------------------------------------------------------------------------------ФУНКЦИИ
-    #Закрытие окна
+    # -----------------------------------------------------------------------------------------------------------------ФУНКЦИИ
+    # Закрытие окна
     def exitApp(self):
         self.destroy()
 
-    #Открытие второго окна (забиндить и добавить эл-ты второго окна в фрейм 2)
+    # Открытие второго окна (забиндить и добавить эл-ты второго окна в фрейм 2)
     def openSecondWindow(self):
         self.frame1.pack_forget()
         self.frameMain.pack()
+        self.inactivity = Inactivity(self.frameMain)
 
-    #Возвращение со второго окна на первое(с основного в Splash)
+    # Возвращение со второго окна на первое(с основного в Splash)
     def backFromMainto1st(self):
         self.frameMain.pack_forget()
         self.frame1.pack()
+        self.inactivity = Inactivity(self.frame1)
 
-    #Открытие окна об авторе с главного окна
+    # Открытие окна об авторе с главного окна
     def openAuthorFromMain(self):
         self.frameMain.pack_forget()
         self.frameAuthor.pack()
+        self.inactivity = Inactivity(self.frameAuthor)
 
-    #Возвращение с окна об авторе на главную
+    # Возвращение с окна об авторе на главную
     def backFromAuthorToMain(self):
         self.frameAuthor.pack_forget()
         self.frameMain.pack()
+        self.inactivity = Inactivity(self.frameMain)
 
     def openAbtProgramm(self):
         self.frameMain.pack_forget()
         self.frameAbtProgramm.pack()
+        self.inactivity = Inactivity(self.frameAbtProgramm)
 
     def backFromAbtProgrammToMain(self):
         self.frameAbtProgramm.pack_forget()
         self.frameMain.pack()
+        self.inactivity = Inactivity(self.frameMain)
 
-    #Очистка всех полей при нажатии кнопки Очистить ввод
+    # Очистка всех полей при нажатии кнопки Очистить ввод
     def clearEntry(self):
 
-        self.comboboxMonth.config(state = "normal")
-        self.comboboxDay.config(state = "normal")
-        self.comboboxTime.config(state = "normal")
-        self.comboboxRoomInBlock.config(state = "normal")
+        self.comboboxMonth.config(state="normal")
+        self.comboboxDay.config(state="normal")
+        self.comboboxTime.config(state="normal")
+        self.comboboxRoomInBlock.config(state="normal")
+        self.comboboxYear.config(state="normal")
 
         self.entry1.delete(0, tk.END)
         self.entry2.delete(0, tk.END)
@@ -388,11 +465,13 @@ class MyApp(tk.Tk):
         self.comboboxDay.delete(0, tk.END)
         self.comboboxTime.delete(0, tk.END)
         self.comboboxRoomInBlock.delete(0, tk.END)
+        self.comboboxYear.delete(0, tk.END)
 
         self.comboboxMonth.config(state="readonly")
         self.comboboxDay.config(state="readonly")
         self.comboboxTime.config(state="readonly")
         self.comboboxRoomInBlock.config(state="readonly")
+        self.comboboxYear.config(state="readonly")
 
     def GetResults(self):
 
@@ -442,34 +521,37 @@ class MyApp(tk.Tk):
             tk.messagebox.showerror("Ошибка", "Введите все данные!")
             return
 
+        self.monthForSort = 0
+
         # Цикл для вывода даты и записи занятых дат в словарь
-        for nameOfMonth, MonthNumber in self.DictForMonthes.items():
+        for nameOfMonth,MonthNumber in self.DictForMonthes.items():
             if self.Month == nameOfMonth:
                 if int(self.Day) < 10:
                     self.concatenateString = "0" + self.Day + "." + MonthNumber
                 else:
                     self.concatenateString = self.Day + "." + MonthNumber
 
+                self.monthForSort = int(MonthNumber)
+
                 # Запись занятой даты в словарь
                 self.recordDuty(self.concatenateString, self.Time)  # Вызов функции записи данных
 
-        #Для сортировки
+        # Для сортировки
         self.fullStringSort = (f"{(str(self.lastName)).capitalize()}\t\t  {(str(self.firstName)).capitalize()}\t\t"
+                               f"{str(self.Block) + str(self.Room)}\t\t{str(self.TelNumber)}\t\t   {str(self.concatenateString)}\t\t{str(self.Time)}\n")
+
+        self.textPlace.insert(tk.END,
+                              f"{(str(self.lastName)).capitalize()}\t\t  {(str(self.firstName)).capitalize()}\t\t"
                               f"{str(self.Block) + str(self.Room)}\t\t{str(self.TelNumber)}\t\t   {str(self.concatenateString)}\t\t{str(self.Time)}\n")
-
-        self.textPlace.insert(tk.END,f"{(str(self.lastName)).capitalize()}\t\t  {(str(self.firstName)).capitalize()}\t\t"
-                              f"{str(self.Block) + str(self.Room)}\t\t{str(self.TelNumber)}\t\t   {str(self.concatenateString)}\t\t{str(self.Time)}\n")
-
-
 
         self.clearEntry()
 
-        #Для сортировки
+        # Для сортировки
         self.recordData()
 
         self.textPlace.config(state='disabled')
 
-    #Функция для изменения чисел при выборе месяца
+    # Функция для изменения чисел при выборе месяца
     def UpdateDays(self, event):
 
         self.comboboxDay.set("")
@@ -484,7 +566,7 @@ class MyApp(tk.Tk):
         self.comboboxDay['values'] = self.days
         self.comboboxTime['values'] = self.comboboxTimeValues  # Сброс значений времени
 
-    #Combobox Day Selected
+    # Combobox Day Selected
     def getInfoComboboxDay(self, event):
 
         stringForDay = self.comboboxDay.get()
@@ -508,7 +590,7 @@ class MyApp(tk.Tk):
         else:
             self.comboboxTime['values'] = self.comboboxTimeValues
 
-    #Запись данных в словарь
+    # Запись данных в словарь
     def recordDuty(self, date, time):
         if date in self.dictZapisanye:
             if time not in self.dictZapisanye[date]:
@@ -516,26 +598,27 @@ class MyApp(tk.Tk):
         else:
             self.dictZapisanye[date] = [time]
 
-    #Запись данных в списки (типо для блоков к примеру свой отдельный список и тд) (для реализации сортировки)
+    # Запись данных в списки (типо для блоков к примеру свой отдельный список и тд) (для реализации сортировки)
     def recordData(self):
 
         self.recordBlocks.append(self.Block)
         self.recordSecondNames.append(self.lastName)
         self.recordFullStrings.append(self.fullStringSort)
+        self.recordDays.append(int(self.Day))
+        self.recordMonthes.append(self.monthForSort)
 
 
-
-    #Удаление всех данных
+    # Удаление всех данных
     def deleteAllData(self):
 
         self.textPlace.config(state='normal')
 
-        result = tk.messagebox.askyesno('Удаление данных', 'Все данные о дежурстве будут безвозвратно удалены.\nПродолжить?')
+        result = tk.messagebox.askyesno('Удаление данных',
+                                        'Все данные о дежурстве будут безвозвратно удалены.\nПродолжить?')
 
         if result:
-            self.textPlace.delete('3.0',tk.END)
+            self.textPlace.delete('3.0', tk.END)
             self.textPlace.insert('2.0', '\n')
-
 
         self.textPlace.config(state='disabled')
 
@@ -543,13 +626,15 @@ class MyApp(tk.Tk):
         self.recordSecondNames.clear()
         self.recordFullStrings.clear()
 
+        self.dictZapisanye.clear()
 
-    #Открывает окно выбора сортировки
+    # Открывает окно выбора сортировки
     def chooseSort(self):
 
         SortWindow(self.frameMain, self)
 
-    #---------------------------------------------------------------------------------------------------------------ФУНКЦИИ
+    # ---------------------------------------------------------------------------------------------------------------ФУНКЦИИ
+
 
 # Класс для создания окна выбора сортировки
 class SortWindow():
@@ -692,28 +777,25 @@ class SortWindow():
         else:
             return False
 
-    # Сортировка по возрастанию блоков
-    #def sortBlocksUp(self):
 
-    #Функция которая проверяет не одна ли строка в тексте (для сортировки нужно минимум 2)
+    # Функция которая проверяет не одна ли строка в тексте (для сортировки нужно минимум 2)
     def checkIsNoOneLine(self):
 
         numberLines = int(self.parent.textPlace.index("end-1c").split(".")[0])
 
+        # Ну типо просто проверил считается ли кол-во строк
+        if (numberLines >= 5):
 
-        #Ну типо просто проверил считается ли кол-во строк
-        if(numberLines >= 5):
-
-            messagebox.showinfo("Результат", "Успешно!", parent = self.sortWindow)
+            messagebox.showinfo("Результат", "Успешно!", parent=self.sortWindow)
 
             return True
 
         else:
-            messagebox.showerror("Ошибка", "Недостаточно записей для сортировки\n(минимум 2)", parent = self.sortWindow)
+            messagebox.showerror("Ошибка", "Недостаточно записей для сортировки\n(минимум 2)", parent=self.sortWindow)
 
             return False
 
-    #Функция сортировки
+    # Функция сортировки
     def funcOfSort(self):
 
         resChecking = self.checkIsEntry()
@@ -727,7 +809,7 @@ class SortWindow():
 
             NoOneLine = self.checkIsNoOneLine()
 
-            #Здесь вызываем функции сортировки
+            # Здесь вызываем функции сортировки
             if NoOneLine:
 
                 if self.selectedSort == "По возрастанию блоков":
@@ -742,11 +824,14 @@ class SortWindow():
 
                     self.sortByAlphabet()
 
-    #Функция сортировки по возрастанию блоков
+                elif self.selectedSort == "По дате":
+
+                    self.sortByData()
+
+    # Функция сортировки по возрастанию блоков
     def sortUpBlocks(self):
         # Ключ - блок, значение - индекс до сортировки
         dictForBlockIndexes = {}
-
 
         for i in self.parent.recordBlocks:
             indexOfBlock = self.parent.recordBlocks.index(i)
@@ -762,7 +847,6 @@ class SortWindow():
 
         # Вставляем отсортированные строки в textPlace
         for block in sortedUpBlocks:
-
             indexInOriginal = dictForBlockIndexes[block]
 
             fullString = self.parent.recordFullStrings[indexInOriginal]
@@ -771,18 +855,17 @@ class SortWindow():
 
         self.parent.textPlace.config(state='disabled')
 
-    #Функция сортировки по возрастанию блоков
+    # Функция сортировки по возрастанию блоков
     def sortDownBlocks(self):
         # Ключ - блок, значение - индекс до сортировки
         dictForBlockIndexes = {}
 
         for i in self.parent.recordBlocks:
-
             indexOfBlock = self.parent.recordBlocks.index(i)
             dictForBlockIndexes[i] = indexOfBlock
 
         # Сортировка блоков и создание нового отсортированного списка
-        sortedDownBlocks = sorted(self.parent.recordBlocks, reverse = True)
+        sortedDownBlocks = sorted(self.parent.recordBlocks, reverse=True)
 
         # Очищаем textPlace
         self.parent.textPlace.config(state='normal')
@@ -797,7 +880,7 @@ class SortWindow():
 
         self.parent.textPlace.config(state='disabled')
 
-    #Сортировка в алфавитном порядке
+    # Сортировка в алфавитном порядке
     def sortByAlphabet(self):
 
         sortedAlphabetical = "".join(sorted(self.parent.recordFullStrings))
@@ -810,7 +893,55 @@ class SortWindow():
 
         self.parent.textPlace.config(state='disabled')
 
+    def sortByData(self):
 
+        # Создание списка кортежей (месяц, день, оригинальный индекс)
+        combined_list = []
+
+        for i in range(len(self.parent.recordDays)):
+            combined_list.append((self.parent.recordMonthes[i], self.parent.recordDays[i], i))
+
+        # Сортировка по месяцу и дню
+        sorted_combined_list = sorted(combined_list, key=lambda x: (x[0], x[1]))
+
+        # Извлечение отсортированных дней, месяцев и индексов
+        sorted1Days = []
+        sortedMonthes = []
+        sortedIndexes = []
+
+        for month, day, index in sorted_combined_list:
+            sortedMonthes.append(month)
+            sorted1Days.append(day)
+            sortedIndexes.append(index)
+
+        # Обновляем списки в self.parent (предполагается, что есть атрибуты для записи)
+        self.parent.recordDays = sorted1Days
+        self.parent.recordMonthes = sortedMonthes
+
+        # Обновляем остальные списки в соответствии с отсортированными индексами
+        sortedBlocks = []
+        sortedSecondNames = []
+        sortedFullStrings = []
+
+        for index in sortedIndexes:
+            sortedBlocks.append(self.parent.recordBlocks[index])
+            sortedSecondNames.append(self.parent.recordSecondNames[index])
+            sortedFullStrings.append(self.parent.recordFullStrings[index])
+
+        self.parent.recordBlocks = sortedBlocks
+        self.parent.recordSecondNames = sortedSecondNames
+        self.parent.recordFullStrings = sortedFullStrings
+
+        # Очищаем textPlace
+        self.parent.textPlace.config(state='normal')
+        self.parent.textPlace.delete('3.0', tk.END)
+        self.parent.textPlace.insert('2.0', "\n")
+
+        # Вставляем отсортированные строки в textPlace
+        for fullString in self.parent.recordFullStrings:
+            self.parent.textPlace.insert(tk.END, fullString)
+
+        self.parent.textPlace.config(state='disabled')
 
 
 app = MyApp()

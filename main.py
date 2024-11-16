@@ -39,9 +39,11 @@ class MyButton(tk.Button):
                          compound=compound, command=command, **kwargs)
         self.place(x=x, y=y)
 
-
+#Класс для отслеживания неактивности в течение 1 мин
 class Inactivity():
+
     def __init__(self, frame):
+
         self.frame = frame
         self.lastActivityTime = time.time()
         self.setupBindings() #Обработчик событий
@@ -61,7 +63,7 @@ class Inactivity():
 
         print(f"Inactivity duration: {timeDuration} seconds")
 
-        if timeDuration >= 10:
+        if timeDuration >= 60:
             self.showWarning()
 
         # Проверка на неактивность каждые 1000 миллисекунд (1 секунда)
@@ -69,7 +71,6 @@ class Inactivity():
 
     def showWarning(self):
         messagebox.showwarning("Бездействие", "Вы афк 60 секунд")
-
 
 # Класс приложения
 class MyApp(tk.Tk):
@@ -82,6 +83,8 @@ class MyApp(tk.Tk):
         self.geometry('800x800')
         self.geometry('+500+100')
         self.resizable(width=False, height=False)
+
+        self.inactivity = Inactivity(self)
 
         # Словарь для хранения записанных дат
         self.dictZapisanye = {}
@@ -418,35 +421,29 @@ class MyApp(tk.Tk):
     def openSecondWindow(self):
         self.frame1.pack_forget()
         self.frameMain.pack()
-        self.inactivity = Inactivity(self.frameMain)
 
     # Возвращение со второго окна на первое(с основного в Splash)
     def backFromMainto1st(self):
         self.frameMain.pack_forget()
         self.frame1.pack()
-        self.inactivity = Inactivity(self.frame1)
 
     # Открытие окна об авторе с главного окна
     def openAuthorFromMain(self):
         self.frameMain.pack_forget()
         self.frameAuthor.pack()
-        self.inactivity = Inactivity(self.frameAuthor)
 
     # Возвращение с окна об авторе на главную
     def backFromAuthorToMain(self):
         self.frameAuthor.pack_forget()
         self.frameMain.pack()
-        self.inactivity = Inactivity(self.frameMain)
 
     def openAbtProgramm(self):
         self.frameMain.pack_forget()
         self.frameAbtProgramm.pack()
-        self.inactivity = Inactivity(self.frameAbtProgramm)
 
     def backFromAbtProgrammToMain(self):
         self.frameAbtProgramm.pack_forget()
         self.frameMain.pack()
-        self.inactivity = Inactivity(self.frameMain)
 
     # Очистка всех полей при нажатии кнопки Очистить ввод
     def clearEntry(self):
@@ -485,33 +482,7 @@ class MyApp(tk.Tk):
         self.Time = self.comboboxTime.get()
         self.Room = self.comboboxRoomInBlock.get()
 
-        # Проверка на корректность ввода фамилии
-        for symbol in self.lastName:
-            if symbol.isdigit() or symbol in "_-+=!@#$%*^()&?~/.,":
-                tk.messagebox.showerror("Некорректный ввод", "Фамилия введена некорректно!")
-                self.entry1.delete(0, tk.END)
-                return
-
-        # Проверка на корректность ввода имени
-        for symbol in self.firstName:
-            if symbol.isdigit() or symbol in "_-+=!@#$%*^()&?~/., ":
-                tk.messagebox.showerror("Некорректный ввод", "Имя введено некорректно!")
-                self.entry2.delete(0, tk.END)
-                return
-
-        # Проверка на корректность ввода блока
-        for symbol in self.Block:
-            if not symbol.isdigit():
-                tk.messagebox.showerror("Некорректный ввод", "Блок введен некорректно!")
-                self.entry3.delete(0, tk.END)
-                return
-
-        # Проверка на корректность ввода номера телефона
-        for symbol in self.TelNumber:
-            if not symbol.isdigit() and symbol not in "+":
-                tk.messagebox.showerror("Некорректный ввод", "Номер введен некорректно!")
-                self.entry4.delete(0, tk.END)
-                return
+        self.checkCorrectEntry()
 
         self.textPlace.config(state='normal')
 
@@ -550,6 +521,45 @@ class MyApp(tk.Tk):
         self.recordData()
 
         self.textPlace.config(state='disabled')
+
+    #def isAllFields(self):
+
+    #def signUp(self):
+        #self.GetResults()
+        #self.checkCorrectEntry()
+
+
+
+    #Проверка корректности ввода данных
+    def checkCorrectEntry(self):
+
+        # Проверка на корректность ввода фамилии
+        for symbol in self.lastName:
+            if symbol.isdigit() or symbol in "_-+=!@#$%*^()&?~/.,":
+                tk.messagebox.showerror("Некорректный ввод", "Фамилия введена некорректно!")
+                self.entry1.delete(0, tk.END)
+                return
+
+        # Проверка на корректность ввода имени
+        for symbol in self.firstName:
+            if symbol.isdigit() or symbol in "_-+=!@#$%*^()&?~/., ":
+                tk.messagebox.showerror("Некорректный ввод", "Имя введено некорректно!")
+                self.entry2.delete(0, tk.END)
+                return
+
+        # Проверка на корректность ввода блока
+        for symbol in self.Block:
+            if not symbol.isdigit():
+                tk.messagebox.showerror("Некорректный ввод", "Блок введен некорректно!")
+                self.entry3.delete(0, tk.END)
+                return
+
+        # Проверка на корректность ввода номера телефона
+        for symbol in self.TelNumber:
+            if not symbol.isdigit() and symbol not in "+":
+                tk.messagebox.showerror("Некорректный ввод", "Номер введен некорректно!")
+                self.entry4.delete(0, tk.END)
+                return
 
     # Функция для изменения чисел при выборе месяца
     def UpdateDays(self, event):
@@ -644,6 +654,8 @@ class SortWindow():
         self.parent = parent
 
         self.sortWindow = tk.Toplevel(frame)
+
+        #self.inactivity = Inactivity(frame)
 
         self.sortWindow.title("Выбор сортировки")
         self.sortWindow.geometry("500x500")

@@ -6,16 +6,16 @@
 
 '''Учет дежурств в общежитии'''
 
-'''Добавить год. При возможности реализовать штуку с пересылкой данных к примеру в ворд файл (типо кнопка отослать коменданту).
-В будущем добавлю сортировки.'''
-
-'''Очищать еще нужно словарь дат записи при удалении данных. Тк я данные к примеру удалил а все равно время конкретного дня исчезло. Очищай словарь'''
+'''Добавить год. При возможности реализовать штуку с пересылкой данных к примеру в ворд файл (типо кнопка отослать коменданту).'''
 
 import tkinter as tk
 from tkinter import ttk
 from tkinter import messagebox
+from tkinter import filedialog
+from openpyxl import Workbook
+from openpyxl.styles import Font
+import os
 import time
-
 
 # Класс для Label
 class MyLabel(tk.Label):
@@ -61,7 +61,6 @@ class Inactivity():
         currentTime = time.time()
         timeDuration = currentTime - self.lastActivityTime
 
-        print(f"Inactivity duration: {timeDuration} seconds")
 
         if timeDuration >= 60:
             self.showWarning()
@@ -71,6 +70,10 @@ class Inactivity():
 
     def showWarning(self):
         messagebox.showwarning("Бездействие", "Вы афк 60 секунд")
+
+
+
+
 
 # Класс приложения
 class MyApp(tk.Tk):
@@ -104,13 +107,18 @@ class MyApp(tk.Tk):
 
         self.fullStringSort = ""
 
-        # Для сортировки
+        # Для сортировки и Excel
         self.recordBlocks = []
+        self.recordRooms = []
         self.recordSecondNames = []
-        #self.recordDate = []
+        self.recordFirstNames = []
         self.recordDays = []
         self.recordMonthes = []
+        self.recordTelNumber = []
+        self.recordTimes = []
         self.recordFullStrings = []
+        self.recordDates = []
+
 
         # Фрейм самого первого Splash окна
         self.frame1 = tk.Frame(self, width=800, height=800)
@@ -118,8 +126,6 @@ class MyApp(tk.Tk):
 
         # Фрейм второго (основного окна)
         self.frameMain = tk.Frame(self, width=800, height=800)
-
-
 
         # Фрейм для окна об авторе
         self.frameAuthor = tk.Frame(self, width=800, height=800)
@@ -341,6 +347,9 @@ class MyApp(tk.Tk):
 
         # Картинка для кнопки выбора сортировки
         self.imageSort = tk.PhotoImage(file='images//sort.png')
+
+        # Картинка для кнопки записи в Excel
+        self.imageExcelBtn = tk.PhotoImage(file = 'images//excel2Btn.png')
         # ---------------------------------------------------------------------------------КАРТИНКИ
 
         # ---------------------------------------------------------------------------------КНОПКИ
@@ -410,6 +419,12 @@ class MyApp(tk.Tk):
                                          compound=tk.TOP, font_size=9, font_weight='bold', command=self.chooseSort,
                                          x=645, y=425)
 
+        # Кнопка выбрать сортировку
+        self.buttonToExcel = MyButton(self.frameMain, text='Сохранить\nв Excel', width=80, height=60,
+                                         image=self.imageExcelBtn,
+                                         compound=tk.TOP, font_size=9, font_weight='bold', command=self.infoToExcel,
+                                         x=645, y=530)
+
     # -----------------------------------------------------------------------------------------------------------------КНОПКИ
 
     # -----------------------------------------------------------------------------------------------------------------ФУНКЦИИ
@@ -445,7 +460,7 @@ class MyApp(tk.Tk):
         self.frameAbtProgramm.pack_forget()
         self.frameMain.pack()
 
-    # Очистка всех полей при нажатии кнопки Очистить ввод
+    # Очистка всех полей при нажатии кнопки очистить ввод
     def clearEntry(self):
 
         self.comboboxMonth.config(state="normal")
@@ -482,7 +497,33 @@ class MyApp(tk.Tk):
         self.Time = self.comboboxTime.get()
         self.Room = self.comboboxRoomInBlock.get()
 
-        self.checkCorrectEntry()
+        # Проверка на корректность ввода фамилии
+        for symbol in self.lastName:
+            if symbol.isdigit() or symbol in "_-+=!@#$%*^()&?~/.,":
+                tk.messagebox.showerror("Некорректный ввод", "Фамилия введена некорректно!")
+                self.entry1.delete(0, tk.END)
+                return
+
+        # Проверка на корректность ввода имени
+        for symbol in self.firstName:
+            if symbol.isdigit() or symbol in "_-+=!@#$%*^()&?~/., ":
+                tk.messagebox.showerror("Некорректный ввод", "Имя введено некорректно!")
+                self.entry2.delete(0, tk.END)
+                return
+
+        # Проверка на корректность ввода блока
+        for symbol in self.Block:
+            if not symbol.isdigit():
+                tk.messagebox.showerror("Некорректный ввод", "Блок введен некорректно!")
+                self.entry3.delete(0, tk.END)
+                return
+
+        # Проверка на корректность ввода номера телефона
+        for symbol in self.TelNumber:
+            if not symbol.isdigit() and symbol not in "+":
+                tk.messagebox.showerror("Некорректный ввод", "Номер введен некорректно!")
+                self.entry4.delete(0, tk.END)
+                return
 
         self.textPlace.config(state='normal')
 
@@ -517,49 +558,16 @@ class MyApp(tk.Tk):
 
         self.clearEntry()
 
-        # Для сортировки
+        # Для сортировки и записи данных для Excel
         self.recordData()
 
         self.textPlace.config(state='disabled')
 
-    #def isAllFields(self):
-
-    #def signUp(self):
-        #self.GetResults()
-        #self.checkCorrectEntry()
-
-
-
-    #Проверка корректности ввода данных
-    def checkCorrectEntry(self):
-
-        # Проверка на корректность ввода фамилии
-        for symbol in self.lastName:
-            if symbol.isdigit() or symbol in "_-+=!@#$%*^()&?~/.,":
-                tk.messagebox.showerror("Некорректный ввод", "Фамилия введена некорректно!")
-                self.entry1.delete(0, tk.END)
-                return
-
-        # Проверка на корректность ввода имени
-        for symbol in self.firstName:
-            if symbol.isdigit() or symbol in "_-+=!@#$%*^()&?~/., ":
-                tk.messagebox.showerror("Некорректный ввод", "Имя введено некорректно!")
-                self.entry2.delete(0, tk.END)
-                return
-
-        # Проверка на корректность ввода блока
-        for symbol in self.Block:
-            if not symbol.isdigit():
-                tk.messagebox.showerror("Некорректный ввод", "Блок введен некорректно!")
-                self.entry3.delete(0, tk.END)
-                return
-
-        # Проверка на корректность ввода номера телефона
-        for symbol in self.TelNumber:
-            if not symbol.isdigit() and symbol not in "+":
-                tk.messagebox.showerror("Некорректный ввод", "Номер введен некорректно!")
-                self.entry4.delete(0, tk.END)
-                return
+        print(self.recordFirstNames)
+        print(self.recordDates)
+        print(self.recordRooms)
+        print(self.recordSecondNames)
+        print(self.recordBlocks)
 
     # Функция для изменения чисел при выборе месяца
     def UpdateDays(self, event):
@@ -616,7 +624,11 @@ class MyApp(tk.Tk):
         self.recordFullStrings.append(self.fullStringSort)
         self.recordDays.append(int(self.Day))
         self.recordMonthes.append(self.monthForSort)
-
+        self.recordRooms.append(self.Room)
+        self.recordFirstNames.append(self.firstName)
+        self.recordTelNumber.append(self.TelNumber)
+        self.recordDates.append(self.concatenateString)
+        self.recordTimes.append(self.Time)
 
     # Удаление всех данных
     def deleteAllData(self):
@@ -635,6 +647,11 @@ class MyApp(tk.Tk):
         self.recordBlocks.clear()
         self.recordSecondNames.clear()
         self.recordFullStrings.clear()
+        self.recordTelNumber.clear()
+        self.recordRooms.clear()
+        self.recordFirstNames.clear()
+        self.recordDates.clear()
+        self.recordTimes.clear()
 
         self.dictZapisanye.clear()
 
@@ -643,10 +660,35 @@ class MyApp(tk.Tk):
 
         SortWindow(self.frameMain, self)
 
+    #Функция записывающая данные в Excel
+    def infoToExcel(self):
+
+        result = tk.messagebox.askyesno("Изменить путь к файлу", "Хотите ли вы выбрать другой файл для записи?")
+
+        if result:
+
+            filePath = tk.filedialog.askopenfilename(title="Выберите файл", filetypes = [("Excel файлы", "*.xls"), ("Excel файлы", ".xlsx")])
+
+            if filePath:
+
+                self.excelObject = WorkExcel(self, filePath)
+
+                self.excelObject.infoInFile(filePath)
+
+        if not result:
+
+            filePath = "excelFiles//Book1.xlsx"
+
+            if filePath:
+
+                self.excelObject = WorkExcel(self, filePath)
+
+                self.excelObject.infoInFile(filePath)
+
+
     # ---------------------------------------------------------------------------------------------------------------ФУНКЦИИ
 
-
-# Класс для создания окна выбора сортировки
+# region Класс для создания окна выбора сортировки
 class SortWindow():
 
     def __init__(self, frame, parent):
@@ -954,6 +996,64 @@ class SortWindow():
             self.parent.textPlace.insert(tk.END, fullString)
 
         self.parent.textPlace.config(state='disabled')
+
+#endregion
+
+#Класс для работы с Excel
+class WorkExcel():
+
+    def __init__(self, parent, filepath):
+
+        self.parent = parent
+
+        self.filepath = filepath
+
+        self.wb = Workbook()
+
+        self.activeList = self.wb.active
+
+        self.activeList.title = "Sheet1"
+
+        self.boldFont = Font(bold=True)
+
+        self.activeList['A1'] = "Фамилия"
+        self.activeList['A1'].font = self.boldFont
+
+        self.activeList['B1'] = "Имя"
+        self.activeList['B1'].font = self.boldFont
+
+        self.activeList['C1'] = "Блок"
+        self.activeList['C1'].font = self.boldFont
+
+        self.activeList['D1'] = "Комната"
+        self.activeList['D1'].font = self.boldFont
+
+        self.activeList['E1'] = "Дата"
+        self.activeList['E1'].font = self.boldFont
+
+        self.activeList['F1'] = "Дата"
+        self.activeList['F1'].font = self.boldFont
+
+        self.wb.save(self.filepath)
+
+    #Функция записывающая данные в таблицу
+    def infoInFile(self, filepath):
+
+        self.filepath = filepath
+
+        for i in range(len(self.parent.recordBlocks)):
+
+            rowData = [self.parent.recordSecondNames[i], self.parent.recordFirstNames[i],self.parent.recordBlocks[i],
+                                    self.parent.recordRooms[i], self.parent.recordDates[i], self.parent.recordTimes[i]]
+
+            if all(isinstance(item, (int, float, str)) for item in rowData):
+
+                self.activeList.append(rowData)
+
+                self.wb.save(self.filepath)
+
+
+    #def deletingInfo(self):
 
 
 app = MyApp()

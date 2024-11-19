@@ -71,10 +71,6 @@ class Inactivity():
     def showWarning(self):
         messagebox.showwarning("Бездействие", "Вы афк 60 секунд")
 
-
-
-
-
 # Класс приложения
 class MyApp(tk.Tk):
 
@@ -83,7 +79,7 @@ class MyApp(tk.Tk):
         super().__init__()
 
         self.title("Учет дежурств")
-        self.geometry('800x800')
+        self.geometry('800x850')
         self.geometry('+500+100')
         self.resizable(width=False, height=False)
 
@@ -135,7 +131,7 @@ class MyApp(tk.Tk):
         self.canvasAbtProgramm = tk.Canvas(self.frameAbtProgramm, width=300, height=800, bg='#9681F0')
         self.canvasAbtProgramm.place(x=0, y=0)
 
-        self.canvas1 = tk.Canvas(self.frameMain, width=750, height=600, bg='#eedcfc', borderwidth=2, relief='solid')
+        self.canvas1 = tk.Canvas(self.frameMain, width=750, height=670, bg='#eedcfc', borderwidth=2, relief='solid')
         self.canvas1.place(x=0, y=50)
 
         self.textPlace = tk.Text(self.frameMain, state='normal', font=("Montserrat", 8, 'bold'))
@@ -350,6 +346,9 @@ class MyApp(tk.Tk):
 
         # Картинка для кнопки записи в Excel
         self.imageExcelBtn = tk.PhotoImage(file = 'images//excel2Btn.png')
+
+        # Картинка для кнопки записи в Excel
+        self.imageClearExcelBtn = tk.PhotoImage(file='images//clearFile.png')
         # ---------------------------------------------------------------------------------КАРТИНКИ
 
         # ---------------------------------------------------------------------------------КНОПКИ
@@ -363,7 +362,7 @@ class MyApp(tk.Tk):
         if self.frameMain:
             self.buttonExit = MyButton(self.frameMain, text='Выход', width=100, height=30, image=self.imageExit,
                                        compound=tk.RIGHT, font_size=9, font_weight='bold', command=self.exitApp, x=525,
-                                       y=700)
+                                       y=760)
 
         if self.frame1:
             self.buttonExit = MyButton(self.frame1, text='Выход', width=200, height=45, image=self.imageExit,
@@ -374,7 +373,7 @@ class MyApp(tk.Tk):
         if self.frameMain:
             self.buttonBack = MyButton(self.frameMain, text='Назад', width=100, height=30, image=self.imageBack,
                                        compound=tk.RIGHT, font_size=9, font_weight='bold',
-                                       command=self.backFromMainto1st, x=645, y=700)
+                                       command=self.backFromMainto1st, x=645, y=760)
 
         if self.frameAbtProgramm:
             self.buttonBack = MyButton(self.frameAbtProgramm, text='Назад', width=100, height=30, image=self.imageBack,
@@ -384,13 +383,13 @@ class MyApp(tk.Tk):
         # Кнопка об авторе (добавить потом это окно)
         self.buttonAuthor = MyButton(self.frameMain, text='Об авторе', width=100, height=30, image=self.imageHuman,
                                      compound=tk.RIGHT, font_size=9, font_weight='bold',
-                                     command=self.openAuthorFromMain, x=200, y=700)
+                                     command=self.openAuthorFromMain, x=200, y=760)
 
         # Кнопка о программе
         self.buttonAbtProgramm = MyButton(self.frameMain, text='О программе', width=120, height=30,
                                           image=self.imageAbtProgramm,
                                           compound=tk.RIGHT, font_size=9, font_weight='bold',
-                                          command=self.openAbtProgramm, x=60, y=700)
+                                          command=self.openAbtProgramm, x=60, y=760)
 
         # Кнопка на главную
         self.buttonToTheMain = MyButton(self.frameAuthor, text='На главную', width=250, height=30,
@@ -419,11 +418,17 @@ class MyApp(tk.Tk):
                                          compound=tk.TOP, font_size=9, font_weight='bold', command=self.chooseSort,
                                          x=645, y=425)
 
-        # Кнопка выбрать сортировку
+        # Кнопка записи в Excel
         self.buttonToExcel = MyButton(self.frameMain, text='Сохранить\nв Excel', width=80, height=60,
                                          image=self.imageExcelBtn,
                                          compound=tk.TOP, font_size=9, font_weight='bold', command=self.infoToExcel,
                                          x=645, y=530)
+
+        # Кнопка очистки Excel файла по умолчанию
+        self.buttonDeleteExcel = MyButton(self.frameMain, text='Очистить\nфайл', width=80, height=60,
+                                      image=self.imageClearExcelBtn,
+                                      compound=tk.TOP, font_size=9, font_weight='bold', command = self.clearDataFromExcel,
+                                      x=645, y=635)
 
     # -----------------------------------------------------------------------------------------------------------------КНОПКИ
 
@@ -685,6 +690,20 @@ class MyApp(tk.Tk):
 
                 self.excelObject.infoInFile(filePath)
 
+    #Функция очистки файла по умолчанию
+    def clearDataFromExcel(self):
+
+        result = tk.messagebox.askyesno("Очистить файл", "Все данные из Excel файла по умолчанию будут удалены. Продолжить?")
+
+        if result:
+
+            filePath = "excelFiles//Book1.xlsx"
+
+            self.excelObject = WorkExcel(self, filePath)
+
+        else:
+
+            return
 
     # ---------------------------------------------------------------------------------------------------------------ФУНКЦИИ
 
@@ -1051,10 +1070,6 @@ class WorkExcel():
                 self.activeList.append(rowData)
 
                 self.wb.save(self.filepath)
-
-
-    #def deletingInfo(self):
-
 
 app = MyApp()
 app.mainloop()

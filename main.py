@@ -13,6 +13,7 @@ from tkinter import ttk
 from tkinter import messagebox
 from tkinter import filedialog
 from openpyxl import Workbook
+from openpyxl import load_workbook
 from openpyxl.styles import Font
 import os
 import time
@@ -430,6 +431,19 @@ class MyApp(tk.Tk):
                                       compound=tk.TOP, font_size=9, font_weight='bold', command = self.clearDataFromExcel,
                                       x=645, y=635)
 
+        #--------------------------------------------------------------------------------------------------------------МЕНЮ КНОПКИ
+
+        self.buttonMenuFile = tk.Menubutton(self.frameMain, text = 'Файл', relief=tk.RAISED, width = 5)
+        self.buttonMenuFile.place(x = 0, y = 0)
+
+        self.fileMenu = tk.Menu(self.buttonMenuFile, tearoff=0)
+        self.buttonMenuFile.config(menu = self.fileMenu)
+
+        #Открытие файла (чтение из файла)
+        self.fileMenu.add_command(label = "Открыть",command=self.openExcelFile) #Сюда добавь команду
+
+        # --------------------------------------------------------------------------------------------------------------МЕНЮ КНОПКИ
+
     # -----------------------------------------------------------------------------------------------------------------КНОПКИ
 
     # -----------------------------------------------------------------------------------------------------------------ФУНКЦИИ
@@ -704,6 +718,65 @@ class MyApp(tk.Tk):
         else:
 
             return
+
+    #Открытие файла(считывание)
+    def openExcelFile(self):
+
+        filePath = tk.filedialog.askopenfilename(title="Выберите файл", filetypes = [("Excel файлы", "*.xls"), ("Excel файлы", ".xlsx")])
+
+        self.wb = load_workbook(filePath)
+
+        self.activeList = self.wb.active
+
+        expectedHeaders = ['Фамилия', 'Имя', 'Блок', 'Комната', 'Номер', 'Дата', 'Время']
+
+        actualHeaders = []
+
+        for i in range(len(expectedHeaders)):
+            actualHeaders.append(self.activeList.cell(row = 1, column = i + 1).value)
+
+        if actualHeaders != expectedHeaders:
+
+            tk.messagebox.showerror("Ошибка файла", "Вы открыли файл с посторонними данными")
+            return
+
+
+        self.recordBlocks.clear()
+        self.recordSecondNames.clear()
+        self.recordFullStrings.clear()
+        self.recordTelNumber.clear()
+        self.recordRooms.clear()
+        self.recordFirstNames.clear()
+        self.recordDates.clear()
+        self.recordTimes.clear()
+
+        self.dictZapisanye.clear()
+
+        for row in self.activeList.iter_rows(min_row=2, max_row=self.activeList.max_row, min_col=1,
+                                             max_col = self.activeList.max_column, values_only=True):
+
+            self.recordSecondNames.append(row[0])
+            self.recordFirstNames.append(row[1])
+            self.recordBlocks.append(row[2])
+            self.recordRooms.append(row[3])
+            self.recordTelNumber.append(row[4])
+            self.recordDates.append(row[5])
+            self.recordTimes.append(row[6])
+
+        self.textPlace.config(state='normal')
+
+        self.textPlace.delete('3.0', tk.END)
+        self.textPlace.insert('2.0', '\n')
+
+        for i in range(len(self.recordBlocks)):
+
+            self.textPlace.insert(tk.END,f"{(str(self.recordSecondNames[i])).capitalize()}\t\t  {(str(self.recordFirstNames[i])).capitalize()}\t\t"
+                                  f"{str(self.recordBlocks[i]) + str(self.recordRooms[i])}\t\t"
+                                         f"{str(self.recordTelNumber[i])}\t\t   {str(self.recordDates[i])}\t\t{str(self.recordTimes[i])}\n")
+
+        self.textPlace.config(state = 'disabled')
+
+        tk.messagebox.showinfo('Чтение из файла', "Успешно!")
 
     # ---------------------------------------------------------------------------------------------------------------ФУНКЦИИ
 
@@ -1047,11 +1120,14 @@ class WorkExcel():
         self.activeList['D1'] = "Комната"
         self.activeList['D1'].font = self.boldFont
 
-        self.activeList['E1'] = "Дата"
+        self.activeList['E1'] = "Номер"
         self.activeList['E1'].font = self.boldFont
 
         self.activeList['F1'] = "Дата"
         self.activeList['F1'].font = self.boldFont
+
+        self.activeList['G1'] = "Время"
+        self.activeList['G1'].font = self.boldFont
 
         self.wb.save(self.filepath)
 
@@ -1063,7 +1139,7 @@ class WorkExcel():
         for i in range(len(self.parent.recordBlocks)):
 
             rowData = [self.parent.recordSecondNames[i], self.parent.recordFirstNames[i],self.parent.recordBlocks[i],
-                                    self.parent.recordRooms[i], self.parent.recordDates[i], self.parent.recordTimes[i]]
+                                    self.parent.recordRooms[i], self.parent.recordTelNumber[i], self.parent.recordDates[i], self.parent.recordTimes[i]]
 
             if all(isinstance(item, (int, float, str)) for item in rowData):
 

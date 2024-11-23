@@ -8,6 +8,9 @@
 
 '''Добавить год. При возможности реализовать штуку с пересылкой данных к примеру в ворд файл (типо кнопка отослать коменданту).'''
 
+'''Таймер только на стартовое окно, так же блоки заполнения должны быть ФИО + НОМЕР; ЧИСЛО + МЕСЯЦ + ГОД (сначала число); БЛОК + КОМНАТА
+ Добавить сортировку от Я до А. 5 декабря показываем готовое приложение. Данные о жильцах надо как то ренеймнуть.'''
+
 import tkinter as tk
 from tkinter import ttk
 from tkinter import messagebox
@@ -15,7 +18,6 @@ from tkinter import filedialog
 from openpyxl import Workbook
 from openpyxl import load_workbook
 from openpyxl.styles import Font
-import os
 import time
 
 # Класс для Label
@@ -442,6 +444,17 @@ class MyApp(tk.Tk):
         #Открытие файла (чтение из файла)
         self.fileMenu.add_command(label = "Открыть",command=self.openExcelFile) #Сюда добавь команду
 
+        self.fileMenu.add_command(label = "Сохранить как", command = self.saveAsExcelFile)
+
+        #Помощь
+        self.buttonMenuHelp = tk.Menubutton(self.frameMain, text = "Помощь", relief = tk.RAISED, width = 7)
+        self.buttonMenuHelp.place(x = 43, y = 0)
+
+        self.helpMenu = tk.Menu(self.buttonMenuHelp, tearoff=0)
+        self.buttonMenuHelp.config(menu = self.helpMenu)
+
+        self.helpMenu.add_command(label = "Использование", command = self.openHelpWindow)
+
         # --------------------------------------------------------------------------------------------------------------МЕНЮ КНОПКИ
 
     # -----------------------------------------------------------------------------------------------------------------КНОПКИ
@@ -478,6 +491,10 @@ class MyApp(tk.Tk):
     def backFromAbtProgrammToMain(self):
         self.frameAbtProgramm.pack_forget()
         self.frameMain.pack()
+
+    def openHelpWindow(self):
+
+        self.helpWindow = HelpWindow(self.frameMain, self)
 
     # Очистка всех полей при нажатии кнопки очистить ввод
     def clearEntry(self):
@@ -777,6 +794,13 @@ class MyApp(tk.Tk):
         self.textPlace.config(state = 'disabled')
 
         tk.messagebox.showinfo('Чтение из файла', "Успешно!")
+
+    #Дописать
+    def saveAsExcelFile(self):
+
+        filePath = tk.filedialog.asksaveasfilename(title="Сохранить файл", filetypes = [("Excel файлы", "*.xls"), ("Excel файлы", ".xlsx")])
+
+        print(filePath)
 
     # ---------------------------------------------------------------------------------------------------------------ФУНКЦИИ
 
@@ -1090,6 +1114,45 @@ class SortWindow():
         self.parent.textPlace.config(state='disabled')
 
 #endregion
+
+#Класс окна помощи
+class HelpWindow():
+
+    def __init__(self, frame, parent):
+
+        self.parent = parent
+
+        self.helpWindow = tk.Toplevel(frame)
+
+        self.helpWindow.title("Использование")
+        self.helpWindow.geometry("600x600")
+        self.helpWindow.geometry("+630+270")
+        self.helpWindow.resizable(width = False, height=False)
+
+        self.frameHelp1 = tk.Frame(self.helpWindow, width = 600, height = 600)
+        self.frameHelp1.place(x = 0, y = 0)
+
+        self.frameHelp2 = tk.Frame(self.helpWindow, width=600, height=600)
+
+        self.canvasHelp1 = tk.Canvas(self.frameHelp1, width=130, height=600, bg='#9681F0')
+        self.canvasHelp1.place(x = 470, y = 0)
+
+        self.labelHelp1 = tk.Label(self.frameHelp1, text = "Шаг 1", font = ("Montserrat", 14, 'bold'))
+        self.labelHelp1.place(x = 180, y = 25)
+
+        self.labelHelp1 = tk.Label(self.frameHelp1, text="Заполните все поля корректными данными и нажмите кнопку 'Записаться'\n"
+                                                         "В случае ввода некорректных данных будет выдана ошибка.\n"
+                                                         "В случае незаполнения всех полей так же будет выдана ошибка", font=("Montserrat", 10), justify = "left")
+        self.labelHelp1.place(x=10, y=400)
+
+        if self.frameHelp1:
+
+            self.buttonNextHelp = MyButton(self.frameHelp1, text = "Далее", width=10, height=2,  x = 350, y = 500, command = self.fromHelp1ToHelp2)
+
+    def fromHelp1ToHelp2(self):
+        self.frameHelp1.pack_forget()
+        self.frameHelp2.pack()
+
 
 #Класс для работы с Excel
 class WorkExcel():

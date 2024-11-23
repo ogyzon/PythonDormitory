@@ -355,6 +355,12 @@ class MyApp(tk.Tk):
 
         # Картинка для кнопки записи в Excel
         self.imageClearExcelBtn = tk.PhotoImage(file='images//clearFile.png')
+
+        #Картинка для кнопки отменить изменения
+        self.imageCancel = tk.PhotoImage(file = 'images//cancel.png')
+
+        #Картинка для кнопки сохранить изменения
+        self.imageSaveChanges = tk.PhotoImage(file = 'images//saveChanges.png')
         # ---------------------------------------------------------------------------------КАРТИНКИ
 
         # ---------------------------------------------------------------------------------КНОПКИ
@@ -435,6 +441,20 @@ class MyApp(tk.Tk):
                                       image=self.imageClearExcelBtn,
                                       compound=tk.TOP, font_size=9, font_weight='bold', command = self.clearDataFromExcel,
                                       x=645, y=635)
+
+        #Кнопка сохранения изменений
+        self.buttonSaveChanges = MyButton(self.frameMain, text = "Сохранить\nизменения", width=80, height=60,
+                                         image=self.imageSaveChanges,
+                                         compound=tk.TOP, font_size=9, font_weight='bold', command=self.saveAndPlace,
+                                         x=645, y=100)
+        self.buttonSaveChanges.place_forget()
+
+        #Кнопка отмена изменений
+        self.buttonCancel = MyButton(self.frameMain, text="Отмена", width=80, height=60,
+                                          image=self.imageCancel,
+                                          compound=tk.TOP, font_size=9, font_weight='bold', command=self.cancelChange,
+                                          x=645, y=210)
+        self.buttonCancel.place_forget()
 
         #--------------------------------------------------------------------------------------------------------------МЕНЮ КНОПКИ
 
@@ -700,10 +720,51 @@ class MyApp(tk.Tk):
 
         SortWindow(self.frameMain, self)
 
+    #Функция отмены изменений
+    def cancelChange(self):
+        self.clearEntry()
+
+        # Скрытие кнопок сохранения изменений и отмены
+        self.buttonSaveChanges.place_forget()
+        self.buttonCancel.place_forget()
+
+        # Возвращение кнопок на исходные позиции
+        self.buttonZapisat.place(x=645, y=100)
+        self.buttonToExcel.place(x=645, y=530)
+        self.buttonDeleteData.place(x=645, y=320)
+        self.buttonChooseSort.place(x=645, y=425)
+        self.buttonDeleteExcel.place(x=645, y=635)
+        self.buttonClear.place(x=645, y=210)
+
+        # Удаление стрелочки и подсветки с текущей выбранной строки
+        if self.selected_index is not None:
+            self.removeArrowAndHighlight(self.selected_index)
+            self.selected_index = None
+
+    #Функция убирающая кнопки при нажатии на редактирование строки
+    def switchButtons(self):
+
+        self.buttonZapisat.place_forget()
+        self.buttonToExcel.place_forget()
+        self.buttonDeleteData.place_forget()
+        self.buttonChooseSort.place_forget()
+        self.buttonDeleteExcel.place_forget()
+        self.buttonClear.place_forget()
+
+        self.buttonSaveChanges.place(x = 645, y = 100)
+        self.buttonCancel.place(x = 645, y = 210)
+
+    #Функция получения данных при нажатии на текст
     def onTextClick(self, event):
+        # Сохраняем индекс предыдущей выбранной строки
+        if hasattr(self, 'selected_index') and self.selected_index is not None:
+            previous_index = self.selected_index
+        else:
+            previous_index = None
+
         self.textPlace.config(state='normal')
         index = self.textPlace.index("@%s,%s" % (event.x, event.y))
-        line_content = self.textPlace.get("%s linestart" % index, "%s lineend" % index)
+        line_content = self.textPlace.get("%s linestart" % index, "%s lineend" % index).strip()
         self.textPlace.config(state='disabled')
 
         print(f"Index: {index}, Line Content: {line_content.strip()}")
@@ -722,8 +783,10 @@ class MyApp(tk.Tk):
                     block = self.recordBlocks[row_index].strip()
                     room = self.recordRooms[row_index].strip()
                     telNumber = self.recordTelNumber[row_index].strip()
-                    day = str(self.recordDays[row_index])
-                    month = self.recordMonthes[row_index]
+                    day = str(self.recordDays[row_index]) if row_index < len(
+                        self.recordDays) else '01'  # Проверка на наличие дня
+                    month = self.recordMonthes[row_index] if row_index < len(
+                        self.recordMonthes) else 1  # Проверка на наличие месяца
                     date_str = self.recordDates[row_index].strip()
                     time = self.recordTimes[row_index].strip()
 
@@ -759,10 +822,136 @@ class MyApp(tk.Tk):
                     self.entry4.config(state='normal')
                     self.entry4.delete(0, tk.END)
                     self.entry4.insert(0, telNumber)
+
+                    # Удаление стрелочки и подсветки с предыдущей строки
+                    if previous_index is not None and previous_index != index:
+                        previous_line_content = self.textPlace.get("%s linestart" % previous_index,
+                                                                   "%s lineend" % previous_index).strip()
+                        if previous_line_content.endswith("←"):
+                            updated_previous_line = previous_line_content[:-1].rstrip()
+                            self.textPlace.config(state='normal')
+                            self.textPlace.delete("%s linestart" % previous_index, "%s lineend" % previous_index)
+                            self.textPlace.insert("%s linestart" % previous_index, updated_previous_line)
+                            self.textPlace.tag_remove("highlight", "%s linestart" % previous_index,
+                                                      "%s lineend" % previous_index)
+                            self.textPlace.config(state='disabled')
+
+                    # Добавление стрелочки "←" к новой выбранной строке и подсветка
+                    if not line_content.endswith("←"):
+                        updated_line = line_content + " ←"
+                        self.textPlace.config(state='normal')
+                        self.textPlace.delete("%s linestart" % index, "%s lineend" % index)
+                        self.textPlace.insert("%s linestart" % index, updated_line)
+                    self.textPlace.tag_add("highlight", "%s linestart" % index, "%s lineend" % index)
+                    self.textPlace.tag_configure("highlight", background="#dca2f5")
+                    self.textPlace.config(state='disabled')
+
+                    # Обновление индекса выбранной строки
+                    self.selected_index = index
+                    self.switchButtons()
                 else:
                     print("Индекс строки выходит за пределы списка")
             except ValueError:
                 print("Не удалось преобразовать индекс строки в целое число")
+
+    #Функция сохранения изменений
+    def saveChanges(self):
+        # Получаем обновленные данные из полей
+        lastName = self.entry1.get().strip()
+        firstName = self.entry2.get().strip()
+        block = self.entry3.get().strip()
+        room = self.comboboxRoomInBlock.get().strip()
+        telNumber = self.entry4.get().strip()
+        day = self.comboboxDay.get().strip().zfill(2)  # Сохраняем ведущий ноль
+        month = next(value for key, value in self.DictForMonthes.items() if self.comboboxMonth.get() == key)
+        time = self.comboboxTime.get().strip()
+        date_str = f"{day}.{month}"
+
+        # Проверка на корректность ввода фамилии
+        if any(symbol.isdigit() or symbol in "_-+=!@#$%*^()&?~/., " for symbol in lastName):
+            messagebox.showerror("Некорректный ввод", "Фамилия введена некорректно!")
+            self.entry1.delete(0, tk.END)
+            self.removeArrowAndHighlight(self.selected_index)
+            return
+
+        # Проверка на корректность ввода имени
+        if any(symbol.isdigit() or symbol in "_-+=!@#$%*^()&?~/., " for symbol in firstName):
+            messagebox.showerror("Некорректный ввод", "Имя введено некорректно!")
+            self.entry2.delete(0, tk.END)
+            self.removeArrowAndHighlight(self.selected_index)
+            return
+
+        # Проверка на корректность ввода блока
+        if any(not symbol.isdigit() for symbol in block):
+            messagebox.showerror("Некорректный ввод", "Блок введен некорректно!")
+            self.entry3.delete(0, tk.END)
+            self.removeArrowAndHighlight(self.selected_index)
+            return
+
+        # Проверка на корректность ввода номера телефона
+        if any(not symbol.isdigit() and symbol not in "+" for symbol in telNumber):
+            messagebox.showerror("Некорректный ввод", "Номер введен некорректно!")
+            self.entry4.delete(0, tk.END)
+            self.removeArrowAndHighlight(self.selected_index)
+            return
+
+        # Проверка все ли поля введены
+        if not all([lastName, firstName, block, telNumber, month, day, time, room]):
+            messagebox.showerror("Ошибка", "Введите все данные!")
+            self.removeArrowAndHighlight(self.selected_index)
+            return
+
+        # Формирование обновленной строки
+        updated_line = f"{lastName.capitalize()}\t\t  {firstName.capitalize()}\t\t{block}{room}\t\t{telNumber}\t\t   {date_str}\t\t{time} ←"
+
+        # Определение текущего индекса строки
+        if self.selected_index:
+            index = self.selected_index
+
+            # Удаление старой строки и вставка обновленной строки
+            self.textPlace.config(state='normal')
+            self.textPlace.delete("%s linestart" % index, "%s lineend" % index)
+            self.textPlace.insert("%s linestart" % index, updated_line)
+            self.textPlace.config(state='disabled')
+
+            # Обновление данных в соответствующих списках
+            row_index = int(index.split('.')[0]) - 3  # Корректировка для учета первых двух строк
+            if row_index >= 0 and row_index < len(self.recordSecondNames):
+                self.recordSecondNames[row_index] = lastName
+                self.recordFirstNames[row_index] = firstName
+                self.recordBlocks[row_index] = block
+                self.recordRooms[row_index] = room
+                self.recordTelNumber[row_index] = telNumber
+                self.recordDays[row_index] = int(day)
+                self.recordMonthes[row_index] = month
+                self.recordDates[row_index] = date_str
+                self.recordTimes[row_index] = time
+                self.recordFullStrings[row_index] = updated_line
+            else:
+                print("Индекс строки выходит за пределы списка")
+
+            # Удаление стрелки и подсветки после сохранения данных
+            self.removeArrowAndHighlight(index)
+            self.selected_index = None
+
+    #Функция убирающая подсветку текста и стрелочку
+    def removeArrowAndHighlight(self, index):
+        if index is not None:
+            line_content = self.textPlace.get("%s linestart" % index, "%s lineend" % index).strip()
+            if line_content.endswith("←"):
+                updated_line = line_content[:-1].rstrip()
+                self.textPlace.config(state='normal')
+                self.textPlace.delete("%s linestart" % index, "%s lineend" % index)
+                self.textPlace.insert("%s linestart" % index, updated_line)
+                self.textPlace.tag_remove("highlight", "%s linestart" % index, "%s lineend" % index)
+                self.textPlace.config(state='disabled')
+
+    #Функция вызывающая функцию сохранения изменений и позиционирующая кнопки
+    def saveAndPlace(self):
+
+        self.saveChanges()
+        self.cancelChange()
+
 
     #Функция записывающая данные в Excel
     def infoToExcel(self):
@@ -806,25 +995,18 @@ class MyApp(tk.Tk):
 
     #Открытие файла(считывание)
     def openExcelFile(self):
-
-        filePath = tk.filedialog.askopenfilename(title="Выберите файл", filetypes = [("Excel файлы", "*.xls"), ("Excel файлы", ".xlsx")])
+        filePath = tk.filedialog.askopenfilename(title="Выберите файл",
+                                                 filetypes=[("Excel файлы", "*.xls"), ("Excel файлы", "*.xlsx")])
 
         self.wb = load_workbook(filePath)
-
         self.activeList = self.wb.active
 
         expectedHeaders = ['Фамилия', 'Имя', 'Блок', 'Комната', 'Номер', 'Дата', 'Время']
-
-        actualHeaders = []
-
-        for i in range(len(expectedHeaders)):
-            actualHeaders.append(self.activeList.cell(row = 1, column = i + 1).value)
+        actualHeaders = [self.activeList.cell(row=1, column=i + 1).value for i in range(len(expectedHeaders))]
 
         if actualHeaders != expectedHeaders:
-
             tk.messagebox.showerror("Ошибка файла", "Вы открыли файл с посторонними данными")
             return
-
 
         self.recordBlocks.clear()
         self.recordSecondNames.clear()
@@ -834,12 +1016,12 @@ class MyApp(tk.Tk):
         self.recordFirstNames.clear()
         self.recordDates.clear()
         self.recordTimes.clear()
-
+        self.recordDays.clear()  # Добавим очистку списка recordDays
+        self.recordMonthes.clear()  # Добавим очистку списка recordMonthes
         self.dictZapisanye.clear()
 
         for row in self.activeList.iter_rows(min_row=2, max_row=self.activeList.max_row, min_col=1,
-                                             max_col = self.activeList.max_column, values_only=True):
-
+                                             max_col=self.activeList.max_column, values_only=True):
             self.recordSecondNames.append(row[0])
             self.recordFirstNames.append(row[1])
             self.recordBlocks.append(row[2])
@@ -848,18 +1030,31 @@ class MyApp(tk.Tk):
             self.recordDates.append(row[5])
             self.recordTimes.append(row[6])
 
-        self.textPlace.config(state='normal')
+            # Добавим извлечение дня и месяца из даты и занесем в соответствующие списки
+            day, month = map(int, row[5].split('.'))
+            self.recordDays.append(day)
+            self.recordMonthes.append(month)
 
+            # Формирование полной строки и добавление в recordFullStrings
+            full_string = f"{row[0].capitalize()}\t\t  {row[1].capitalize()}\t\t{row[2]}{row[3]}\t\t{row[4]}\t\t   {row[5]}\t\t{row[6]}"
+            self.recordFullStrings.append(full_string)
+
+            # Обновление словаря записанных временных слотов
+            if row[5] not in self.dictZapisanye:
+                self.dictZapisanye[row[5]] = []
+            self.dictZapisanye[row[5]].append(row[6])
+
+        self.textPlace.config(state='normal')
         self.textPlace.delete('3.0', tk.END)
         self.textPlace.insert('2.0', '\n')
 
         for i in range(len(self.recordBlocks)):
-
-            self.textPlace.insert(tk.END,f"{(str(self.recordSecondNames[i])).capitalize()}\t\t  {(str(self.recordFirstNames[i])).capitalize()}\t\t"
+            self.textPlace.insert(tk.END,
+                                  f"{(str(self.recordSecondNames[i])).capitalize()}\t\t  {(str(self.recordFirstNames[i])).capitalize()}\t\t"
                                   f"{str(self.recordBlocks[i]) + str(self.recordRooms[i])}\t\t"
-                                         f"{str(self.recordTelNumber[i])}\t\t   {str(self.recordDates[i])}\t\t{str(self.recordTimes[i])}\n")
+                                  f"{str(self.recordTelNumber[i])}\t\t   {str(self.recordDates[i])}\t\t{str(self.recordTimes[i])}\n")
 
-        self.textPlace.config(state = 'disabled')
+        self.textPlace.config(state='disabled')
 
         tk.messagebox.showinfo('Чтение из файла', "Успешно!")
 
@@ -1081,15 +1276,10 @@ class SortWindow():
 
     # Функция сортировки по возрастанию блоков
     def sortUpBlocks(self):
-        # Ключ - блок, значение - индекс до сортировки
-        dictForBlockIndexes = {}
-
-        for i in self.parent.recordBlocks:
-            indexOfBlock = self.parent.recordBlocks.index(i)
-            dictForBlockIndexes[i] = indexOfBlock
-
-        # Сортировка блоков и создание нового отсортированного списка
-        sortedUpBlocks = sorted(self.parent.recordBlocks)
+        # Создание списка кортежей (блок, индекс)
+        combined_list = list(enumerate(self.parent.recordBlocks))
+        # Сортировка по блокам
+        sorted_combined_list = sorted(combined_list, key=lambda x: x[1])
 
         # Очищаем textPlace
         self.parent.textPlace.config(state='normal')
@@ -1097,26 +1287,18 @@ class SortWindow():
         self.parent.textPlace.insert('2.0', "\n")
 
         # Вставляем отсортированные строки в textPlace
-        for block in sortedUpBlocks:
-            indexInOriginal = dictForBlockIndexes[block]
-
-            fullString = self.parent.recordFullStrings[indexInOriginal]
-
+        for index, _ in sorted_combined_list:
+            fullString = self.parent.recordFullStrings[index] + "\n"
             self.parent.textPlace.insert(tk.END, fullString)
 
         self.parent.textPlace.config(state='disabled')
 
     # Функция сортировки по возрастанию блоков
     def sortDownBlocks(self):
-        # Ключ - блок, значение - индекс до сортировки
-        dictForBlockIndexes = {}
-
-        for i in self.parent.recordBlocks:
-            indexOfBlock = self.parent.recordBlocks.index(i)
-            dictForBlockIndexes[i] = indexOfBlock
-
-        # Сортировка блоков и создание нового отсортированного списка
-        sortedDownBlocks = sorted(self.parent.recordBlocks, reverse=True)
+        # Создание списка кортежей (блок, индекс)
+        combined_list = list(enumerate(self.parent.recordBlocks))
+        # Сортировка по блокам
+        sorted_combined_list = sorted(combined_list, key=lambda x: x[1], reverse=True)
 
         # Очищаем textPlace
         self.parent.textPlace.config(state='normal')
@@ -1124,76 +1306,44 @@ class SortWindow():
         self.parent.textPlace.insert('2.0', "\n")
 
         # Вставляем отсортированные строки в textPlace
-        for block in sortedDownBlocks:
-            indexInOriginal = dictForBlockIndexes[block]
-            fullString = self.parent.recordFullStrings[indexInOriginal]
+        for index, _ in sorted_combined_list:
+            fullString = self.parent.recordFullStrings[index] + "\n"
             self.parent.textPlace.insert(tk.END, fullString)
-
-        self.parent.textPlace.config(state='disabled')
-
-    # Сортировка в алфавитном порядке
-    def sortByAlphabetDown(self):
-
-        sortedAlphabetical = "".join(sorted(self.parent.recordFullStrings, reverse=True))
-
-        self.parent.textPlace.config(state='normal')
-        self.parent.textPlace.delete('3.0', tk.END)
-        self.parent.textPlace.insert('2.0', "\n")
-
-        self.parent.textPlace.insert(tk.END, sortedAlphabetical)
 
         self.parent.textPlace.config(state='disabled')
 
     # Сортировка в алфавитном порядке
     def sortByAlphabetUp(self):
-        sortedAlphabetical = "".join(sorted(self.parent.recordFullStrings))
+        # Сортируем полный список строк по алфавиту
+        sortedAlphabetical = sorted(self.parent.recordFullStrings)
 
         self.parent.textPlace.config(state='normal')
         self.parent.textPlace.delete('3.0', tk.END)
         self.parent.textPlace.insert('2.0', "\n")
 
-        self.parent.textPlace.insert(tk.END, sortedAlphabetical)
+        for string in sortedAlphabetical:
+            self.parent.textPlace.insert(tk.END, string + "\n")
+
+        self.parent.textPlace.config(state='disabled')
+
+    def sortByAlphabetDown(self):
+        # Сортируем полный список строк по алфавиту в обратном порядке
+        sortedAlphabetical = sorted(self.parent.recordFullStrings, reverse=True)
+
+        self.parent.textPlace.config(state='normal')
+        self.parent.textPlace.delete('3.0', tk.END)
+        self.parent.textPlace.insert('2.0', "\n")
+
+        for string in sortedAlphabetical:
+            self.parent.textPlace.insert(tk.END, string + "\n")
 
         self.parent.textPlace.config(state='disabled')
 
     def sortByData(self):
-
-        # Создание списка кортежей (месяц, день, оригинальный индекс)
-        combined_list = []
-
-        for i in range(len(self.parent.recordDays)):
-            combined_list.append((self.parent.recordMonthes[i], self.parent.recordDays[i], i))
-
+        # Создание списка кортежей (месяц, день, индекс)
+        combined_list = list(enumerate(zip(self.parent.recordMonthes, self.parent.recordDays)))
         # Сортировка по месяцу и дню
-        sorted_combined_list = sorted(combined_list, key=lambda x: (x[0], x[1]))
-
-        # Извлечение отсортированных дней, месяцев и индексов
-        sorted1Days = []
-        sortedMonthes = []
-        sortedIndexes = []
-
-        for month, day, index in sorted_combined_list:
-            sortedMonthes.append(month)
-            sorted1Days.append(day)
-            sortedIndexes.append(index)
-
-        # Обновляем списки в self.parent (предполагается, что есть атрибуты для записи)
-        self.parent.recordDays = sorted1Days
-        self.parent.recordMonthes = sortedMonthes
-
-        # Обновляем остальные списки в соответствии с отсортированными индексами
-        sortedBlocks = []
-        sortedSecondNames = []
-        sortedFullStrings = []
-
-        for index in sortedIndexes:
-            sortedBlocks.append(self.parent.recordBlocks[index])
-            sortedSecondNames.append(self.parent.recordSecondNames[index])
-            sortedFullStrings.append(self.parent.recordFullStrings[index])
-
-        self.parent.recordBlocks = sortedBlocks
-        self.parent.recordSecondNames = sortedSecondNames
-        self.parent.recordFullStrings = sortedFullStrings
+        sorted_combined_list = sorted(combined_list, key=lambda x: (x[1][0], x[1][1]))
 
         # Очищаем textPlace
         self.parent.textPlace.config(state='normal')
@@ -1201,10 +1351,12 @@ class SortWindow():
         self.parent.textPlace.insert('2.0', "\n")
 
         # Вставляем отсортированные строки в textPlace
-        for fullString in self.parent.recordFullStrings:
+        for index, _ in sorted_combined_list:
+            fullString = self.parent.recordFullStrings[index] + "\n"
             self.parent.textPlace.insert(tk.END, fullString)
 
         self.parent.textPlace.config(state='disabled')
+
 
 #endregion
 

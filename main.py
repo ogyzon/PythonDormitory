@@ -141,6 +141,7 @@ class MyApp(tk.Tk):
         self.textPlace.place(x=20, y=210, width=600, height=400)
         self.textPlace.insert(tk.END, f"Фамилия\t\t  Имя\t\tБлок\t\tTелефон\t\t   Дата\t\tВремя\n\n")
         self.textPlace.config(state='disabled')
+        self.textPlace.bind('<ButtonRelease-1>', self.onTextClick)
 
         # Лейблы с текстом Splash окна
         self.label1 = MyLabel(self.frame1, text='Белорусский национальный технический университет', x=195, y=20)
@@ -208,19 +209,19 @@ class MyApp(tk.Tk):
 
         self.label22 = MyLabel(self.frameMain, text="Имя", font_size=10, bg='#eedcfc', x=150, y=70)
 
-        self.label23 = MyLabel(self.frameMain, text="Блок", font_size=10, bg='#eedcfc', x=280, y=70)
+        self.label23 = MyLabel(self.frameMain, text="Блок", font_size=10, bg='#eedcfc', x = 450, y = 70)
 
-        self.label24 = MyLabel(self.frameMain, text="Номер телефона", font_size=10, bg='#eedcfc', x=400, y=140)
+        self.label24 = MyLabel(self.frameMain, text="Номер телефона", font_size=10, bg='#eedcfc', x=280, y=70)
 
         self.label24 = MyLabel(self.frameMain, text="Время", font_size=10, bg='#eedcfc', x=280, y=140)
 
-        self.label25 = MyLabel(self.frameMain, text="Месяц", font_size=10, bg='#eedcfc', x=20, y=140)
+        self.label25 = MyLabel(self.frameMain, text="Месяц", font_size=10, bg='#eedcfc', x=150, y=140)
 
-        self.label26 = MyLabel(self.frameMain, text="День", font_size=10, bg='#eedcfc', x=150, y=140)
+        self.label26 = MyLabel(self.frameMain, text="День", font_size=10, bg='#eedcfc', x=20, y=140)
 
-        self.label27 = MyLabel(self.frameMain, text="Комната", font_size=10, bg='#eedcfc', x=400, y=70)
+        self.label27 = MyLabel(self.frameMain, text="Комната", font_size=10, bg='#eedcfc',  x = 540, y = 70)
 
-        self.label28 = MyLabel(self.frameMain, text="Год", font_size=10, bg='#eedcfc', x=530, y=70)
+        self.label28 = MyLabel(self.frameMain, text="Год", font_size=10, bg='#eedcfc', x=400, y=140)
 
         # Entry поля на главном окне
         # Ввод фамилии
@@ -233,11 +234,11 @@ class MyApp(tk.Tk):
 
         # Ввод блока
         self.entry3 = tk.Entry(self.frameMain, width=10)
-        self.entry3.place(x=280, y=100)
+        self.entry3.place(x = 450, y = 100)
 
         # Ввод номера тф
         self.entry4 = tk.Entry(self.frameMain, width=18)
-        self.entry4.place(x=400, y=170)
+        self.entry4.place(x=280, y=100)
 
         self.dictForMonthDays = {"Январь": 31,
                                  "Февраль": 28,  # Простой год
@@ -258,12 +259,13 @@ class MyApp(tk.Tk):
                                                                   'Июль', 'Август', 'Сентябрь',
                                                                   'Октябрь', 'Ноябрь', 'Декабрь'], width=12,
                                           state="readonly")
-        self.comboboxMonth.place(x=20, y=170)
+        self.comboboxMonth.place(x=150, y=170)
         self.comboboxMonth.bind("<<ComboboxSelected>>", self.UpdateDays)
 
         # Ввод дня
         self.comboboxDay = ttk.Combobox(self.frameMain, width=12, state="readonly")
-        self.comboboxDay.place(x=150, y=170)
+        self.comboboxDay.place(x=20, y=170)
+        self.UpdateDays(None)
         self.comboboxDay.bind("<<ComboboxSelected>>", self.getInfoComboboxDay)
 
         self.comboboxTimeValues = ['8.00 - 10.30', '10.30 - 13.00', '13.00 - 15.30', '15.30 - 18.00', '18.00 - 20.00']
@@ -274,10 +276,11 @@ class MyApp(tk.Tk):
 
         # Ввод комнаты
         self.comboboxRoomInBlock = ttk.Combobox(self.frameMain, values=['А', 'Б'], width=11, state='readonly')
-        self.comboboxRoomInBlock.place(x=400, y=100)
+        self.comboboxRoomInBlock.place(x = 540, y = 100)
 
+        #Ввод года
         self.comboboxYear = ttk.Combobox(self.frameMain, values = ['2025'], width=11, state='readonly')
-        self.comboboxYear.place(x = 530, y = 100)
+        self.comboboxYear.place(x = 400, y = 170)
 
         # ---------------------------------------------------------------------------------------КАРТИНКИ
         self.imageDormitory = tk.PhotoImage(file='images//iconDormitory.png')
@@ -605,46 +608,47 @@ class MyApp(tk.Tk):
         print(self.recordSecondNames)
         print(self.recordBlocks)
 
-    # Функция для изменения чисел при выборе месяца
     def UpdateDays(self, event):
-
-        self.comboboxDay.set("")
         self.monthUser = self.comboboxMonth.get()
-        self.days = []
+        current_day = self.comboboxDay.get()
 
-        for month, date in self.dictForMonthDays.items():
-            if self.monthUser == month:
-                for i in range(1, date + 1):
-                    self.days.append(str(i))
+        # Изначально устанавливаем 31 день
+        self.days = [str(i) for i in range(1, 32)]
+
+        if self.monthUser:
+            days_in_month = self.dictForMonthDays[self.monthUser]
+            self.days = [str(i) for i in range(1, days_in_month + 1)]
+
+            if current_day and int(current_day) > days_in_month:
+                self.comboboxDay.set("")
+            elif current_day:
+                self.comboboxDay.set(current_day)
 
         self.comboboxDay['values'] = self.days
-        self.comboboxTime['values'] = self.comboboxTimeValues  # Сброс значений времени
+        self.updateAvailableTimes()
 
-    # Combobox Day Selected
     def getInfoComboboxDay(self, event):
+        self.updateAvailableTimes()
 
+    def updateAvailableTimes(self):
         stringForDay = self.comboboxDay.get()
 
+        self.FullConcatenate = None
         for nameOfMonth, MonthNumber in self.DictForMonthes.items():
-
             if self.monthUser == nameOfMonth:
-
                 if int(stringForDay) < 10:
                     self.FullConcatenate = "0" + stringForDay + "." + MonthNumber
-
                 else:
                     self.FullConcatenate = stringForDay + "." + MonthNumber
 
-        if self.FullConcatenate in self.dictZapisanye:
+        if self.FullConcatenate:
+            if self.FullConcatenate in self.dictZapisanye:
+                reserved_times = self.dictZapisanye[self.FullConcatenate]
+                available_times = [time for time in self.comboboxTimeValues if time not in reserved_times]
+                self.comboboxTime['values'] = available_times
+            else:
+                self.comboboxTime['values'] = self.comboboxTimeValues
 
-            reserved_times = self.dictZapisanye[self.FullConcatenate]
-            available_times = [time for time in self.comboboxTimeValues if time not in reserved_times]
-            self.comboboxTime['values'] = available_times
-
-        else:
-            self.comboboxTime['values'] = self.comboboxTimeValues
-
-    # Запись данных в словарь
     def recordDuty(self, date, time):
         if date in self.dictZapisanye:
             if time not in self.dictZapisanye[date]:
@@ -695,6 +699,70 @@ class MyApp(tk.Tk):
     def chooseSort(self):
 
         SortWindow(self.frameMain, self)
+
+    def onTextClick(self, event):
+        self.textPlace.config(state='normal')
+        index = self.textPlace.index("@%s,%s" % (event.x, event.y))
+        line_content = self.textPlace.get("%s linestart" % index, "%s lineend" % index)
+        self.textPlace.config(state='disabled')
+
+        print(f"Index: {index}, Line Content: {line_content.strip()}")
+
+        parts = line_content.split()
+        if len(parts) >= 7:
+            try:
+                row_index = int(index.split('.')[0]) - 3  # Корректировка для учета первых двух строк
+                print(f"Row Index: {row_index}")
+                print(
+                    f"List Lengths: {len(self.recordSecondNames)}, {len(self.recordFirstNames)}, {len(self.recordBlocks)}, {len(self.recordRooms)}, {len(self.recordTelNumber)}, {len(self.recordDays)}, {len(self.recordMonthes)}, {len(self.recordDates)}, {len(self.recordTimes)}")
+
+                if row_index >= 0 and row_index < len(self.recordSecondNames):
+                    lastName = self.recordSecondNames[row_index].strip()
+                    firstName = self.recordFirstNames[row_index].strip()
+                    block = self.recordBlocks[row_index].strip()
+                    room = self.recordRooms[row_index].strip()
+                    telNumber = self.recordTelNumber[row_index].strip()
+                    day = str(self.recordDays[row_index])
+                    month = self.recordMonthes[row_index]
+                    date_str = self.recordDates[row_index].strip()
+                    time = self.recordTimes[row_index].strip()
+
+                    # Форматируем месяц как строку с двумя цифрами
+                    month_str = f"{month:02}"
+                    print(f"Day: {day}, Month: {month_str}, Date: {date_str}, Time: {time}")
+
+                    self.comboboxDay.set(day)
+                    month_name = next((key for key, value in self.DictForMonthes.items() if value == month_str), None)
+                    if month_name:
+                        self.comboboxMonth.set(month_name)
+                    else:
+                        print(f"Не удалось найти соответствие для месяца: {month_str}")
+
+                    self.comboboxTime.set(time)
+                    self.updateAvailableTimes()
+
+                    self.entry1.config(state='normal')
+                    self.entry1.delete(0, tk.END)
+                    self.entry1.insert(0, lastName)
+
+                    self.entry2.config(state='normal')
+                    self.entry2.delete(0, tk.END)
+                    self.entry2.insert(0, firstName)
+
+                    self.entry3.config(state='normal')
+                    self.entry3.delete(0, tk.END)
+                    self.entry3.insert(0, block)
+
+                    self.comboboxRoomInBlock.config(state='normal')
+                    self.comboboxRoomInBlock.set(room)
+
+                    self.entry4.config(state='normal')
+                    self.entry4.delete(0, tk.END)
+                    self.entry4.insert(0, telNumber)
+                else:
+                    print("Индекс строки выходит за пределы списка")
+            except ValueError:
+                print("Не удалось преобразовать индекс строки в целое число")
 
     #Функция записывающая данные в Excel
     def infoToExcel(self):
@@ -853,7 +921,7 @@ class SortWindow():
 
         # ------------------------------------------------------------------КОМБОБОКСЫ
 
-        self.comboboxSort = ttk.Combobox(self.sortWindow, values=['В алфавитном порядке', 'По возрастанию блоков',
+        self.comboboxSort = ttk.Combobox(self.sortWindow, values=['В алфавитном порядке (от А до Я)', 'В алфавитном порядке (от Я до А)', 'По возрастанию блоков',
                                                                   'По убыванию блоков', 'По дате'], width=30,
                                          font=('Montserrat', 10, 'bold'))
         self.comboboxSort.place(x=200, y=80)
@@ -890,13 +958,23 @@ class SortWindow():
 
         self.checkIsEntry()
 
-        if (self.selectedSort == "В алфавитном порядке"):
+        if (self.selectedSort == "В алфавитном порядке (от А до Я)"):
 
             self.textExampleSort.insert('0.0', "До")
 
             self.textExampleSort.insert("end", "- Жоров\n- Ловчиновский\n- Бататкин\n\n")
             self.textExampleSort.insert("end", "После\n\n")
             self.textExampleSort.insert("end", "- Бататкин\n- Жоров\n- Ловчиновский")
+
+            self.textExampleSort.config(state='disabled')
+
+        elif (self.selectedSort == 'В алфавитном порядке (от Я до А)'):
+
+            self.textExampleSort.insert('0.0', "До")
+
+            self.textExampleSort.insert("end", "- Жоров\n- Ловчиновский\n- Бататкин\n\n")
+            self.textExampleSort.insert("end", "После\n\n")
+            self.textExampleSort.insert("end", "- Ловчиновский\n- Жоров\n- Бататкин")
 
             self.textExampleSort.config(state='disabled')
 
@@ -990,9 +1068,12 @@ class SortWindow():
 
                     self.sortDownBlocks()
 
-                elif self.selectedSort == "В алфавитном порядке":
+                elif self.selectedSort == "В алфавитном порядке (от А до Я)":
 
-                    self.sortByAlphabet()
+                    self.sortByAlphabetUp()
+
+                elif self.selectedSort == "В алфавитном порядке (от Я до А)":
+                    self.sortByAlphabetDown()
 
                 elif self.selectedSort == "По дате":
 
@@ -1051,8 +1132,20 @@ class SortWindow():
         self.parent.textPlace.config(state='disabled')
 
     # Сортировка в алфавитном порядке
-    def sortByAlphabet(self):
+    def sortByAlphabetDown(self):
 
+        sortedAlphabetical = "".join(sorted(self.parent.recordFullStrings, reverse=True))
+
+        self.parent.textPlace.config(state='normal')
+        self.parent.textPlace.delete('3.0', tk.END)
+        self.parent.textPlace.insert('2.0', "\n")
+
+        self.parent.textPlace.insert(tk.END, sortedAlphabetical)
+
+        self.parent.textPlace.config(state='disabled')
+
+    # Сортировка в алфавитном порядке
+    def sortByAlphabetUp(self):
         sortedAlphabetical = "".join(sorted(self.parent.recordFullStrings))
 
         self.parent.textPlace.config(state='normal')

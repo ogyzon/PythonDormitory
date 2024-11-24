@@ -20,6 +20,8 @@ from openpyxl import load_workbook
 from docx import Document
 from openpyxl.styles import Font
 import time
+import threading
+import telebot
 
 # Класс для Label
 class MyLabel(tk.Label):
@@ -86,6 +88,10 @@ class MyApp(tk.Tk):
         self.geometry('800x850')
         self.geometry('+500+100')
         self.resizable(width=False, height=False)
+
+        self.protocol("WM_DELETE_WINDOW", self.onClosing)  # Обработчик закрытия окна
+        self.telegramBot = MyTelegramBot()
+        self.chatID = 990537084
 
         self.inactivity = Inactivity(self)
 
@@ -493,6 +499,11 @@ class MyApp(tk.Tk):
     # -----------------------------------------------------------------------------------------------------------------КНОПКИ
 
     # -----------------------------------------------------------------------------------------------------------------ФУНКЦИИ
+
+    def onClosing(self):
+        self.telegramBot.bot.stop_polling()  # Останавливаем бота при закрытии окна
+        self.destroy() # Закрываем главное окно
+
     # Закрытие окна
     def exitApp(self):
         self.destroy()
@@ -1133,6 +1144,14 @@ class MyApp(tk.Tk):
         self.document.save(self.filePath)
         print(f"Файл '{self.filePath}' успешно создан.")
 
+        self.sendFileByBot()
+
+    #Функция отправки файла
+    def sendFileByBot(self):
+        filePath = 'wordFiles//Word1.docx'
+        self.telegramBot.sendDocument(self.chatID, filePath)
+
+
     # ---------------------------------------------------------------------------------------------------------------ФУНКЦИИ
 
 # region Класс для создания окна выбора сортировки
@@ -1535,5 +1554,45 @@ class WorkExcel():
 
                 self.wb.save(self.filepath)
 
+#Класс работы с телеграм-ботом
+class MyTelegramBot():
+
+    def __init__(self):
+
+        self.bot = telebot.TeleBot('7931036017:AAF-C7LUTnueZ1Mgftg8uw1j0YjpH76rzZ0')
+
+        @self.bot.message_handler(commands = ['start'])
+        def startFunc(message):
+            self.bot.send_message(message.chat.id, f"Здравствуйте {message.from_user.first_name}.Данный бот разработан студентом БНТУ ФИТР гр. 10701123 Жоровым Е.А"
+                                                   " для отправки файлов с данными о записях на дежурство в общежитии")
+
+        @self.bot.message_handler(commands=['about'])
+        def abtProgram(message):
+            self.bot.send_message(message.chat.id,"Здравствуйте. Данный бот разработан студентом БНТУ ФИТР гр. 10701123 Жоровым Е.А"
+                                  " для отправки файлов с данными о записях на дежурство в общежитии")
+
+        @self.bot.message_handler(commands=['id'])
+        def abtProgram(message):
+            self.bot.send_message(message.chat.id,message.chat.id)
+
+    def sendDocument(self, chat_id, file_path):
+
+        with open(file_path, 'rb') as file:
+            self.bot.send_document(chat_id, file)
+
+    def runBot(self):
+        self.bot.infinity_polling()
+
+def runTelegramBot(bot_instance):
+    bot_instance.runBot()
+
 app = MyApp()
+
+# Создаем и запускаем поток для бота
+bot_thread = threading.Thread(target=runTelegramBot, args=(app.telegramBot,))
+
+bot_thread.daemon = True # Задает поток как фоновый (закрывается при завершении основного потока)
+bot_thread.start()
+
 app.mainloop()
+

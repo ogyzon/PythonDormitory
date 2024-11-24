@@ -89,6 +89,8 @@ class MyApp(tk.Tk):
 
         self.inactivity = Inactivity(self)
 
+        self.sortWindowInstance = None
+
         # Словарь для хранения записанных дат
         self.dictZapisanye = {}
 
@@ -442,17 +444,12 @@ class MyApp(tk.Tk):
                                          compound=tk.TOP, font_size=9, font_weight='bold', command=self.infoToExcel,
                                          x=645, y=530)
 
-        # Кнопка очистки Excel файла по умолчанию
-        self.buttonDeleteExcel = MyButton(self.frameMain, text='Очистить\nфайл', width=80, height=60,
-                                      image=self.imageClearExcelBtn,
-                                      compound=tk.TOP, font_size=9, font_weight='bold', command = self.clearDataFromExcel,
-                                      x=645, y=635)
 
         # Кнопка сохранения в Docx
         self.buttonToDocx = MyButton(self.frameMain, text='Отправить\nкоменданту', width=80, height=60,
                                           image=self.imageWord,
                                           compound=tk.TOP, font_size=9, font_weight='bold', command = self.infoToDocx,
-                                          x=345, y=635)
+                                          x = 645, y = 630)
 
         #Кнопка сохранения изменений
         self.buttonSaveChanges = MyButton(self.frameMain, text = "Сохранить\nизменения", width=80, height=60,
@@ -480,7 +477,7 @@ class MyApp(tk.Tk):
         #Открытие файла (чтение из файла)
         self.fileMenu.add_command(label = "Открыть",command=self.openExcelFile) #Сюда добавь команду
 
-        self.fileMenu.add_command(label = "Сохранить как", command = self.saveAsExcelFile)
+        self.fileMenu.add_command(label = "Очистить файл", command = self.clearDataFromExcel)
 
         #Помощь
         self.buttonMenuHelp = tk.Menubutton(self.frameMain, text = "Помощь", relief = tk.RAISED, width = 7)
@@ -735,8 +732,10 @@ class MyApp(tk.Tk):
 
     # Открывает окно выбора сортировки
     def chooseSort(self):
-
-        SortWindow(self.frameMain, self)
+        if self.sortWindowInstance is None or not tk.Toplevel.winfo_exists(self.sortWindowInstance.sortWindow):
+            self.sortWindowInstance = SortWindow(self.frameMain, self)
+        else:
+            self.sortWindowInstance.sortWindow.deiconify()
 
     #Функция отмены изменений
     def cancelChange(self):
@@ -751,8 +750,8 @@ class MyApp(tk.Tk):
         self.buttonToExcel.place(x=645, y=530)
         self.buttonDeleteData.place(x=645, y=320)
         self.buttonChooseSort.place(x=645, y=425)
-        self.buttonDeleteExcel.place(x=645, y=635)
         self.buttonClear.place(x=645, y=210)
+        self.buttonToDocx.place(x = 645, y = 630)
 
         # Удаление стрелочки и подсветки с текущей выбранной строки
         if self.selected_index is not None:
@@ -766,8 +765,8 @@ class MyApp(tk.Tk):
         self.buttonToExcel.place_forget()
         self.buttonDeleteData.place_forget()
         self.buttonChooseSort.place_forget()
-        self.buttonDeleteExcel.place_forget()
         self.buttonClear.place_forget()
+        self.buttonToDocx.place_forget()
 
         self.buttonSaveChanges.place(x = 645, y = 100)
         self.buttonCancel.place(x = 645, y = 210)
@@ -1134,17 +1133,18 @@ class MyApp(tk.Tk):
         self.document.save(self.filePath)
         print(f"Файл '{self.filePath}' успешно создан.")
 
-    #Дописать
-    def saveAsExcelFile(self):
-
-        filePath = tk.filedialog.asksaveasfilename(title="Сохранить файл", filetypes = [("Excel файлы", "*.xls"), ("Excel файлы", ".xlsx")])
-
-        print(filePath)
-
     # ---------------------------------------------------------------------------------------------------------------ФУНКЦИИ
 
 # region Класс для создания окна выбора сортировки
 class SortWindow():
+
+    _instance =  None
+
+    def __new__(cls, frame, parent):
+        if cls._instance is None or not tk.Toplevel.winfo_exists(cls._instance.sortWindow):
+            cls._instance = super(SortWindow, cls).__new__(cls)
+            cls._instance._initialized = False
+        return cls._instance
 
     def __init__(self, frame, parent):
 

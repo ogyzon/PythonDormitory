@@ -18,6 +18,7 @@ from tkinter import filedialog
 from openpyxl import Workbook
 from openpyxl import load_workbook
 from openpyxl.styles import Font
+
 import time
 
 # Класс для Label
@@ -265,7 +266,7 @@ class MyApp(tk.Tk):
         # Ввод дня
         self.comboboxDay = ttk.Combobox(self.frameMain, width=12, state="readonly")
         self.comboboxDay.place(x=20, y=170)
-        self.UpdateDays(None)
+
         self.comboboxDay.bind("<<ComboboxSelected>>", self.getInfoComboboxDay)
 
         self.comboboxTimeValues = ['8.00 - 10.30', '10.30 - 13.00', '13.00 - 15.30', '15.30 - 18.00', '18.00 - 20.00']
@@ -273,6 +274,8 @@ class MyApp(tk.Tk):
         # Ввод времени
         self.comboboxTime = ttk.Combobox(self.frameMain, values=self.comboboxTimeValues, width=11, state="readonly")
         self.comboboxTime.place(x=280, y=170)
+
+        self.UpdateDays(None)
 
         # Ввод комнаты
         self.comboboxRoomInBlock = ttk.Combobox(self.frameMain, values=['А', 'Б'], width=11, state='readonly')
@@ -652,10 +655,15 @@ class MyApp(tk.Tk):
 
     def updateAvailableTimes(self):
         stringForDay = self.comboboxDay.get()
+        stringForMonth = self.comboboxMonth.get()
+
+        if not stringForDay:  # Проверка на пустую строку
+            self.comboboxTime['values'] = self.comboboxTimeValues
+            return
 
         self.FullConcatenate = None
         for nameOfMonth, MonthNumber in self.DictForMonthes.items():
-            if self.monthUser == nameOfMonth:
+            if stringForMonth == nameOfMonth:
                 if int(stringForDay) < 10:
                     self.FullConcatenate = "0" + stringForDay + "." + MonthNumber
                 else:
@@ -854,6 +862,13 @@ class MyApp(tk.Tk):
             except ValueError:
                 print("Не удалось преобразовать индекс строки в целое число")
 
+    def removeDuty(self, date, time):
+        if date in self.dictZapisanye:
+            if time in self.dictZapisanye[date]:
+                self.dictZapisanye[date].remove(time)
+                if not self.dictZapisanye[date]:  # Удаление даты, если нет занятых временных слотов
+                    del self.dictZapisanye[date]
+
     #Функция сохранения изменений
     def saveChanges(self):
         # Получаем обновленные данные из полей
@@ -907,6 +922,14 @@ class MyApp(tk.Tk):
         # Определение текущего индекса строки
         if self.selected_index:
             index = self.selected_index
+            row_index = int(index.split('.')[0]) - 3  # Корректировка для учета первых двух строк
+
+            # Получение старого времени и даты
+            old_date_str = self.recordDates[row_index]
+            old_time = self.recordTimes[row_index]
+
+            # Удаление старого времени из словаря dictZapisanye
+            self.removeDuty(old_date_str, old_time)
 
             # Удаление старой строки и вставка обновленной строки
             self.textPlace.config(state='normal')
@@ -915,7 +938,6 @@ class MyApp(tk.Tk):
             self.textPlace.config(state='disabled')
 
             # Обновление данных в соответствующих списках
-            row_index = int(index.split('.')[0]) - 3  # Корректировка для учета первых двух строк
             if row_index >= 0 and row_index < len(self.recordSecondNames):
                 self.recordSecondNames[row_index] = lastName
                 self.recordFirstNames[row_index] = firstName
@@ -929,6 +951,9 @@ class MyApp(tk.Tk):
                 self.recordFullStrings[row_index] = updated_line
             else:
                 print("Индекс строки выходит за пределы списка")
+
+            # Запись нового времени в словарь dictZapisanye
+            self.recordDuty(date_str, time)
 
             # Удаление стрелки и подсветки после сохранения данных
             self.removeArrowAndHighlight(index)

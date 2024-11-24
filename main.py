@@ -17,8 +17,8 @@ from tkinter import messagebox
 from tkinter import filedialog
 from openpyxl import Workbook
 from openpyxl import load_workbook
+from docx import Document
 from openpyxl.styles import Font
-
 import time
 
 # Класс для Label
@@ -364,6 +364,9 @@ class MyApp(tk.Tk):
 
         #Картинка для кнопки сохранить изменения
         self.imageSaveChanges = tk.PhotoImage(file = 'images//saveChanges.png')
+
+        # Картинка для кнопки отправить коменданту
+        self.imageWord = tk.PhotoImage(file='images//word.png')
         # ---------------------------------------------------------------------------------КАРТИНКИ
 
         # ---------------------------------------------------------------------------------КНОПКИ
@@ -445,6 +448,12 @@ class MyApp(tk.Tk):
                                       compound=tk.TOP, font_size=9, font_weight='bold', command = self.clearDataFromExcel,
                                       x=645, y=635)
 
+        # Кнопка сохранения в Docx
+        self.buttonToDocx = MyButton(self.frameMain, text='Отправить\nкоменданту', width=80, height=60,
+                                          image=self.imageWord,
+                                          compound=tk.TOP, font_size=9, font_weight='bold', command = self.infoToDocx,
+                                          x=345, y=635)
+
         #Кнопка сохранения изменений
         self.buttonSaveChanges = MyButton(self.frameMain, text = "Сохранить\nизменения", width=80, height=60,
                                          image=self.imageSaveChanges,
@@ -458,6 +467,7 @@ class MyApp(tk.Tk):
                                           compound=tk.TOP, font_size=9, font_weight='bold', command=self.cancelChange,
                                           x=645, y=210)
         self.buttonCancel.place_forget()
+
 
         #--------------------------------------------------------------------------------------------------------------МЕНЮ КНОПКИ
 
@@ -1083,6 +1093,47 @@ class MyApp(tk.Tk):
 
         tk.messagebox.showinfo('Чтение из файла', "Успешно!")
 
+    def infoToDocx(self):
+        self.filePath = 'wordFiles//Word1.docx'
+        self.document = Document()
+
+        # Добавляем заголовок документа
+        self.document.add_heading("Данные о записях на дежурство", 0)
+
+        # Добавляем таблицу в документ
+        table = self.document.add_table(rows=1, cols=7)
+
+        # Определяем заголовки таблицы
+        hdr_cells = table.rows[0].cells
+        hdr_cells[0].text = 'Фамилия'
+        hdr_cells[1].text = 'Имя'
+        hdr_cells[2].text = 'Блок'
+        hdr_cells[3].text = 'Комната'
+        hdr_cells[4].text = 'Номер'
+        hdr_cells[5].text = 'Дата'
+        hdr_cells[6].text = 'Время'
+
+        # Заполняем таблицу данными
+        for i in range(len(self.recordBlocks)):
+            row_cells = table.add_row().cells
+            rowData = [
+                self.recordSecondNames[i],
+                self.recordFirstNames[i],
+                self.recordBlocks[i],
+                self.recordRooms[i],
+                self.recordTelNumber[i],
+                self.recordDates[i],
+                self.recordTimes[i]
+            ]
+
+            if all(isinstance(item, (int, float, str)) for item in rowData):
+                for j, cell in enumerate(row_cells):
+                    cell.text = str(rowData[j])
+
+        # Сохраняем документ
+        self.document.save(self.filePath)
+        print(f"Файл '{self.filePath}' успешно создан.")
+
     #Дописать
     def saveAsExcelFile(self):
 
@@ -1367,6 +1418,10 @@ class SortWindow():
     def sortByData(self):
         # Создание списка кортежей (месяц, день, индекс)
         combined_list = list(enumerate(zip(self.parent.recordMonthes, self.parent.recordDays)))
+
+        # Преобразование данных к типу int для корректной сортировки
+        combined_list = [(i, (int(month), int(day))) for i, (month, day) in combined_list]
+
         # Сортировка по месяцу и дню
         sorted_combined_list = sorted(combined_list, key=lambda x: (x[1][0], x[1][1]))
 

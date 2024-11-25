@@ -19,8 +19,9 @@ from openpyxl import Workbook
 from openpyxl import load_workbook
 from docx import Document
 from openpyxl.styles import Font
-import time
 import threading
+import time
+import os
 import telebot
 
 # Класс для Label
@@ -45,11 +46,14 @@ class MyButton(tk.Button):
                          compound=compound, command=command, **kwargs)
         self.place(x=x, y=y)
 
-#Класс для отслеживания неактивности в течение 1 мин
-import tkinter as tk
-from tkinter import messagebox
-import time
+class User():
 
+    def __init__(self, username, role):
+
+        self.username = username
+        self.role = role
+
+#Класс для отслеживания неактивности в течение 1 мин
 class Inactivity:
     def __init__(self, frame):
         self.frame = frame
@@ -100,9 +104,18 @@ class MyApp(tk.Tk):
         self.geometry('+500+100')
         self.resizable(width=False, height=False)
 
+        self.user = None
+        self.roles = {"commandant" : "комендант",
+                      "student" : "студент"}
+
         self.protocol("WM_DELETE_WINDOW", self.onClosing)  # Обработчик закрытия окна
         self.telegramBot = MyTelegramBot()
         self.chatID = 990537084
+
+        self.filePath = "excelFiles//Book1.xlsx"
+
+        if not os.path.exists(self.filePath):
+            self.excelObjectFirst = WorkExcel(self, self.filePath)
 
         self.sortWindowInstance = None
 
@@ -136,13 +149,15 @@ class MyApp(tk.Tk):
         self.recordFullStrings = []
         self.recordDates = []
 
-
         # Фрейм самого первого Splash окна
         self.frame1 = tk.Frame(self, width=800, height=800)
         self.frame1.place(x=0, y=0)
 
         self.inactivity = Inactivity(self.frame1)
         self.inactivity.startCheck()
+
+        #Фрейм окна аутентификации
+        self.frameAuthentification = tk.Frame(self, width=800, height = 800)
 
         # Фрейм второго (основного окна)
         self.frameMain = tk.Frame(self, width=800, height=800)
@@ -157,6 +172,9 @@ class MyApp(tk.Tk):
 
         self.canvas1 = tk.Canvas(self.frameMain, width=750, height=670, bg='#eedcfc', borderwidth=2, relief='solid')
         self.canvas1.place(x=0, y=50)
+
+        #self.canvasAuthentific = tk.Canvas(self.frameAuthentification, width = 500, height=950, bg = "black")
+        #self.canvasAuthentific.place(x = 160, y = 50)
 
         self.textPlace = tk.Text(self.frameMain, state='normal', font=("Montserrat", 8, 'bold'))
         self.textPlace.place(x=20, y=210, width=600, height=400)
@@ -244,6 +262,20 @@ class MyApp(tk.Tk):
 
         self.label28 = MyLabel(self.frameMain, text="Год", font_size=10, bg='#eedcfc', x=400, y=140)
 
+        self.label29 = MyLabel(self.frameAuthentification, text = "Добро пожаловать!", font_size = 18, font_weight='bold', x=290, y=140)
+
+        self.label30 = MyLabel(self.frameAuthentification, text = "Войдите в программу как комендант/студент", font_size = 10, x = 270, y = 180)
+
+        self.label31 = MyLabel(self.frameAuthentification, text = "Логин", font_size=10, x = 260, y = 240)
+
+        self.label32 = MyLabel(self.frameAuthentification, text = "Пароль", font_size=10, x = 260, y = 310)
+
+        self.label33 = MyLabel(self.frameAuthentification, text = 'Не комендант?',font_size=9, x = 300, y = 450)
+
+        self.label34 = MyLabel(self.frameAuthentification, text = 'Войти как студент',font_size=9, font_weight='bold', x = 395, y = 450, cursor = "hand2", fg = '#6F52E6')
+
+        self.label34.bind("<Button-1>", lambda e: self.fromAuthentificToMainStudent())
+
         # Entry поля на главном окне
         # Ввод фамилии
         self.entry1 = tk.Entry(self.frameMain, width=15)
@@ -260,6 +292,14 @@ class MyApp(tk.Tk):
         # Ввод номера тф
         self.entry4 = tk.Entry(self.frameMain, width=18)
         self.entry4.place(x=280, y=100)
+
+        #Ввод логина
+        self.entry5 = tk.Entry(self.frameAuthentification, width=30, font=('Montserrat', 13))
+        self.entry5.place(x = 260, y = 270)
+
+        # Ввод пароля
+        self.entry6 = tk.Entry(self.frameAuthentification, width=30, font=('Montserrat', 13), show = "*")
+        self.entry6.place(x=260, y=340)
 
         self.dictForMonthDays = {"Январь": 31,
                                  "Февраль": 28,  # Простой год
@@ -346,6 +386,11 @@ class MyApp(tk.Tk):
                                             y=460)
         self.labelForAbtProgramm6.image = self.imageForAbtProgramm6
 
+
+        self.imageForAuthentific = tk.PhotoImage(file = 'images//dormitoryAuth.png')
+        self.labelForAuthentific = MyLabel(self.frameAuthentification, image=self.imageForAuthentific, x=365, y=45)
+        self.labelForAuthentific.image = self.imageForAuthentific
+
         # Картинка для кнопки выйти
         self.imageExit = tk.PhotoImage(file='images//exitMain.png')
 
@@ -393,8 +438,12 @@ class MyApp(tk.Tk):
 
         # Кнопка далее
         self.buttonStart = MyButton(self.frame1, text='Далее', fg='white', width=30, height=3,
-                                    font_size=9, font_weight='bold', bg='#8251FE', command=self.openSecondWindow, x=150,
+                                    font_size=9, font_weight='bold', bg='#8251FE', command=self.openAuthentificWindow, x=150,
                                     y=700)
+        #Кнопка войти
+        self.buttonLogIn = MyButton(self.frameAuthentification, text = "Войти", fg='white', width=38, height=2,
+                                    font_size=9, font_weight='bold', bg='#8251FE', command=self.fromAuthentificToMainCommandant, x=260,
+                                    y=395)
 
         # Кнопка выход
         if self.frameMain:
@@ -464,10 +513,16 @@ class MyApp(tk.Tk):
 
 
         # Кнопка сохранения в Docx
-        self.buttonToDocx = MyButton(self.frameMain, text='Отправить\nкоменданту', width=80, height=60,
+        self.buttonToDocx = MyButton(self.frameMain, text='Сохранить\nв Word', width=80, height=60,
                                           image=self.imageWord,
                                           compound=tk.TOP, font_size=9, font_weight='bold', command = self.infoToDocx,
                                           x = 645, y = 630)
+
+        # Кнопка отправки файла в бот
+        self.buttonSendToBot = MyButton(self.frameMain, text='Отправить\nкоменданту', width=80, height=60,
+                                     image=self.imageWord,
+                                     compound=tk.TOP, font_size=9, font_weight='bold', command=self.sendFileToBot,
+                                     x=645, y=630)
 
         #Кнопка сохранения изменений
         self.buttonSaveChanges = MyButton(self.frameMain, text = "Сохранить\nизменения", width=80, height=60,
@@ -520,11 +575,54 @@ class MyApp(tk.Tk):
     def exitApp(self):
         self.destroy()
 
+    #Проверка правильности ввода логина и пароля
+    def checkLoginPassword(self):
+
+        self.userLogin = self.entry5.get()
+        self.userPassword = self.entry6.get()
+
+        if(str(self.userLogin) == "commandant" and str(self.userPassword) == "12345678"): #Селфы можно убрать
+            self.user = User(self.userLogin, self.roles["commandant"])
+            tk.messagebox.showinfo("Авторизация", "Вы вошли как комендант!")
+
+            return True
+
+        else:
+            tk.messagebox.showerror("Ошибка", "Неверный логин или пароль")
+            self.entry5.delete(0, tk.END)
+            self.entry6.delete(0, tk.END)
+
+            return False
+
+
     # Открытие второго окна (забиндить и добавить эл-ты второго окна в фрейм 2)
-    def openSecondWindow(self):
+    def openAuthentificWindow(self):
         self.frame1.pack_forget()
-        self.frameMain.pack()
+        self.frameAuthentification.pack()
         self.inactivity.stopCheck()
+
+    #Открытие главного окна после входа
+    def fromAuthentificToMainCommandant(self):
+
+        if (self.checkLoginPassword()):
+
+            self.checkRoleAndDisplayButtons()
+
+            self.frameAuthentification.pack_forget()
+            self.frameMain.pack()
+
+        else:
+            return
+
+    #Вход как студент
+    def fromAuthentificToMainStudent(self):
+
+        self.user = User("student", "студент")
+
+        self.frameAuthentification.pack_forget()
+        self.frameMain.pack()
+
+        self.checkRoleAndDisplayButtons()
 
     # Возвращение со второго окна на первое(с основного в Splash)
     def backFromMainto1st(self):
@@ -553,6 +651,28 @@ class MyApp(tk.Tk):
     def openHelpWindow(self):
 
         self.helpWindow = HelpWindow(self.frameMain, self)
+
+    #Функция убирающая кнопки в зависимости от роли пользователя
+    def checkRoleAndDisplayButtons(self):
+
+        if self.user.role == "студент":
+
+            self.buttonDeleteData.place_forget()
+            self.buttonChooseSort.place_forget()
+            self.buttonToDocx.place_forget()
+
+            self.buttonToExcel.place(x=645, y=320)
+            self.buttonSendToBot.place(x = 645, y = 425)
+
+            self.startReading()
+
+            #здесь допиши чтобы по умолчанию у студентов была введена таблица по умолчанию
+
+
+        else:
+
+            self.buttonSendToBot.place_forget()
+
 
     # Очистка всех полей при нажатии кнопки очистить ввод
     def clearEntry(self):
@@ -1039,6 +1159,8 @@ class MyApp(tk.Tk):
 
                 self.excelObject.infoInFile(filePath)
 
+                tk.messagebox.showinfo("Сохранение", f"Данные успешно сохранены!\n{self.filePath}")
+
         if not result:
 
             filePath = "excelFiles//Book1.xlsx"
@@ -1048,6 +1170,8 @@ class MyApp(tk.Tk):
                 self.excelObject = WorkExcel(self, filePath)
 
                 self.excelObject.infoInFile(filePath)
+
+                tk.messagebox.showinfo("Сохранение", f"Данные успешно сохранены!\n{self.filePath}")
 
     #Функция очистки файла по умолчанию
     def clearDataFromExcel(self):
@@ -1064,10 +1188,10 @@ class MyApp(tk.Tk):
 
             return
 
-    #Открытие файла(считывание)
-    def openExcelFile(self):
-        filePath = tk.filedialog.askopenfilename(title="Выберите файл",
-                                                 filetypes=[("Excel файлы", "*.xls"), ("Excel файлы", "*.xlsx")])
+    #Функция начального считывания файла Excel если пользователь студент
+    def startReading(self):
+
+        filePath = "excelFiles//Book1.xlsx"
         # Проверка, выбрал ли пользователь файл или нажал "Отмена"
         if not filePath:
             return
@@ -1078,6 +1202,12 @@ class MyApp(tk.Tk):
         except Exception as e:
             tk.messagebox.showerror("Ошибка файла", f"Не удалось открыть файл: {str(e)}")
             return
+
+        self.readFromExcel()
+
+
+    #Считывание данных с Excel
+    def readFromExcel(self):
 
         expectedHeaders = ['Фамилия', 'Имя', 'Блок', 'Комната', 'Номер', 'Дата', 'Время']
         actualHeaders = [self.activeList.cell(row=1, column=i + 1).value for i in range(len(expectedHeaders))]
@@ -1134,7 +1264,22 @@ class MyApp(tk.Tk):
 
         self.textPlace.config(state='disabled')
 
-        tk.messagebox.showinfo('Чтение из файла', "Успешно!")
+    #Открытие файла
+    def openExcelFile(self):
+        filePath = tk.filedialog.askopenfilename(title="Выберите файл",
+                                                 filetypes=[("Excel файлы", "*.xls"), ("Excel файлы", "*.xlsx")])
+        # Проверка, выбрал ли пользователь файл или нажал "Отмена"
+        if not filePath:
+            return
+
+        try:
+            self.wb = load_workbook(filePath)
+            self.activeList = self.wb.active
+        except Exception as e:
+            tk.messagebox.showerror("Ошибка файла", f"Не удалось открыть файл: {str(e)}")
+            return
+
+        self.readFromExcel()
 
     def infoToDocx(self):
         self.filePath = 'wordFiles//Word1.docx'
@@ -1175,15 +1320,16 @@ class MyApp(tk.Tk):
 
         # Сохраняем документ
         self.document.save(self.filePath)
-        print(f"Файл '{self.filePath}' успешно создан.")
 
-        self.sendFileByBot()
+        tk.messagebox.showinfo("Сохранение", f"Данные успешно сохранены!\n{self.filePath}")
 
-    #Функция отправки файла
-    def sendFileByBot(self):
+    #Функция отправки файла в бот
+    def sendFileToBot(self):
+
+        self.infoToDocx()
+
         filePath = 'wordFiles//Word1.docx'
         self.telegramBot.sendDocument(self.chatID, filePath)
-
 
     # ---------------------------------------------------------------------------------------------------------------ФУНКЦИИ
 

@@ -580,8 +580,22 @@ class MyApp(tk.Tk):
         self.comboboxYear.config(state="readonly")
 
     def GetResults(self):
+        self.getUserInput()
 
-        # Получение данных от пользователя
+        if not self.validateInput():
+            return
+
+        if not self.checkAllFields():
+            return
+
+        self.processDateAndRecord()
+
+        self.displayResults()
+
+        self.clearEntry()
+        self.recordData()
+
+    def getUserInput(self):
         self.lastName = self.entry1.get()
         self.firstName = self.entry2.get()
         self.Block = self.entry3.get()
@@ -591,77 +605,75 @@ class MyApp(tk.Tk):
         self.Time = self.comboboxTime.get()
         self.Room = self.comboboxRoomInBlock.get()
 
-        # Проверка на корректность ввода фамилии
+    def validateInput(self):
+        if not self.validateLastName():
+            return False
+        if not self.validateFirstName():
+            return False
+        if not self.validateBlock():
+            return False
+        if not self.validateTelNumber():
+            return False
+        return True
+
+    def validateLastName(self):
         for symbol in self.lastName:
             if symbol.isdigit() or symbol in "_-+=!@#$%*^()&?~/.,":
                 tk.messagebox.showerror("Некорректный ввод", "Фамилия введена некорректно!")
                 self.entry1.delete(0, tk.END)
-                return
+                return False
+        return True
 
-        # Проверка на корректность ввода имени
+    def validateFirstName(self):
         for symbol in self.firstName:
             if symbol.isdigit() or symbol in "_-+=!@#$%*^()&?~/., ":
                 tk.messagebox.showerror("Некорректный ввод", "Имя введено некорректно!")
                 self.entry2.delete(0, tk.END)
-                return
+                return False
+        return True
 
-        # Проверка на корректность ввода блока
+    def validateBlock(self):
         for symbol in self.Block:
             if not symbol.isdigit():
                 tk.messagebox.showerror("Некорректный ввод", "Блок введен некорректно!")
                 self.entry3.delete(0, tk.END)
-                return
+                return False
+        return True
 
-        # Проверка на корректность ввода номера телефона
+    def validateTelNumber(self):
         for symbol in self.TelNumber:
             if not symbol.isdigit() and symbol not in "+":
                 tk.messagebox.showerror("Некорректный ввод", "Номер введен некорректно!")
                 self.entry4.delete(0, tk.END)
-                return
+                return False
+        return True
 
+    def checkAllFields(self):
         self.textPlace.config(state='normal')
-
-        # Проверка все ли поля введены
         if not all([self.lastName, self.firstName, self.Block, self.TelNumber, self.Month, self.Day, self.Time,
                     self.Room]):
             tk.messagebox.showerror("Ошибка", "Введите все данные!")
-            return
+            return False
+        return True
 
+    def processDateAndRecord(self):
         self.monthForSort = 0
-
-        # Цикл для вывода даты и записи занятых дат в словарь
-        for nameOfMonth,MonthNumber in self.DictForMonthes.items():
+        for nameOfMonth, MonthNumber in self.DictForMonthes.items():
             if self.Month == nameOfMonth:
                 if int(self.Day) < 10:
                     self.concatenateString = "0" + self.Day + "." + MonthNumber
                 else:
                     self.concatenateString = self.Day + "." + MonthNumber
-
                 self.monthForSort = int(MonthNumber)
+                self.recordDuty(self.concatenateString, self.Time)
 
-                # Запись занятой даты в словарь
-                self.recordDuty(self.concatenateString, self.Time)  # Вызов функции записи данных
-
-        # Для сортировки
+    def displayResults(self):
         self.fullStringSort = (f"{(str(self.lastName)).capitalize()}\t\t  {(str(self.firstName)).capitalize()}\t\t"
                                f"{str(self.Block) + str(self.Room)}\t\t{str(self.TelNumber)}\t\t   {str(self.concatenateString)}\t\t{str(self.Time)}\n")
-
         self.textPlace.insert(tk.END,
                               f"{(str(self.lastName)).capitalize()}\t\t  {(str(self.firstName)).capitalize()}\t\t"
                               f"{str(self.Block) + str(self.Room)}\t\t{str(self.TelNumber)}\t\t   {str(self.concatenateString)}\t\t{str(self.Time)}\n")
-
-        self.clearEntry()
-
-        # Для сортировки и записи данных для Excel
-        self.recordData()
-
         self.textPlace.config(state='disabled')
-
-        print(self.recordFirstNames)
-        print(self.recordDates)
-        print(self.recordRooms)
-        print(self.recordSecondNames)
-        print(self.recordBlocks)
 
     def UpdateDays(self, event):
         self.monthUser = self.comboboxMonth.get()

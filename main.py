@@ -46,14 +46,16 @@ class MyButton(tk.Button):
         self.place(x=x, y=y)
 
 #Класс для отслеживания неактивности в течение 1 мин
-class Inactivity():
+import tkinter as tk
+from tkinter import messagebox
+import time
 
+class Inactivity:
     def __init__(self, frame):
-
         self.frame = frame
         self.lastActivityTime = time.time()
-        self.setupBindings() #Обработчик событий
-        self.checkInactivity() #Проверка на неактивость
+        self.is_active = False  # Флаг для управления активностью
+        self.setupBindings()  # Обработчик событий
 
     def resetTime(self, event):
         self.lastActivityTime = time.time()
@@ -62,13 +64,21 @@ class Inactivity():
         self.frame.bind_all('<Any-KeyPress>', self.resetTime)
         self.frame.bind_all('<Any-Button>', self.resetTime)
 
+    def startCheck(self):
+        self.is_active = True
+        self.checkInactivity()
+
+    def stopCheck(self):
+        self.is_active = False
+
     def checkInactivity(self):
+        if not self.is_active:
+            return
 
         currentTime = time.time()
         timeDuration = currentTime - self.lastActivityTime
 
-
-        if timeDuration >= 60:
+        if timeDuration >= 10:
             self.showWarning()
 
         # Проверка на неактивность каждые 1000 миллисекунд (1 секунда)
@@ -76,6 +86,7 @@ class Inactivity():
 
     def showWarning(self):
         messagebox.showwarning("Бездействие", "Вы афк 60 секунд")
+
 
 # Класс приложения
 class MyApp(tk.Tk):
@@ -92,8 +103,6 @@ class MyApp(tk.Tk):
         self.protocol("WM_DELETE_WINDOW", self.onClosing)  # Обработчик закрытия окна
         self.telegramBot = MyTelegramBot()
         self.chatID = 990537084
-
-        self.inactivity = Inactivity(self)
 
         self.sortWindowInstance = None
 
@@ -131,6 +140,9 @@ class MyApp(tk.Tk):
         # Фрейм самого первого Splash окна
         self.frame1 = tk.Frame(self, width=800, height=800)
         self.frame1.place(x=0, y=0)
+
+        self.inactivity = Inactivity(self.frame1)
+        self.inactivity.startCheck()
 
         # Фрейм второго (основного окна)
         self.frameMain = tk.Frame(self, width=800, height=800)
@@ -512,11 +524,13 @@ class MyApp(tk.Tk):
     def openSecondWindow(self):
         self.frame1.pack_forget()
         self.frameMain.pack()
+        self.inactivity.stopCheck()
 
     # Возвращение со второго окна на первое(с основного в Splash)
     def backFromMainto1st(self):
         self.frameMain.pack_forget()
         self.frame1.pack()
+        self.inactivity.startCheck()
 
     # Открытие окна об авторе с главного окна
     def openAuthorFromMain(self):
@@ -1042,9 +1056,16 @@ class MyApp(tk.Tk):
     def openExcelFile(self):
         filePath = tk.filedialog.askopenfilename(title="Выберите файл",
                                                  filetypes=[("Excel файлы", "*.xls"), ("Excel файлы", "*.xlsx")])
+        # Проверка, выбрал ли пользователь файл или нажал "Отмена"
+        if not filePath:
+            return
 
-        self.wb = load_workbook(filePath)
-        self.activeList = self.wb.active
+        try:
+            self.wb = load_workbook(filePath)
+            self.activeList = self.wb.active
+        except Exception as e:
+            tk.messagebox.showerror("Ошибка файла", f"Не удалось открыть файл: {str(e)}")
+            return
 
         expectedHeaders = ['Фамилия', 'Имя', 'Блок', 'Комната', 'Номер', 'Дата', 'Время']
         actualHeaders = [self.activeList.cell(row=1, column=i + 1).value for i in range(len(expectedHeaders))]

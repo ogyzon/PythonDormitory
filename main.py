@@ -4,6 +4,10 @@
 Курсовой проект по дисциплине "Языки программирования"
 Минск 2024'''
 
+'''МЕЙНИТцугшпагпуцап ДА МЕНЙИТ'''
+
+'''копия в ef'''
+
 '''Учет дежурств в общежитии'''
 
 '''Добавить год. При возможности реализовать штуку с пересылкой данных к примеру в ворд файл (типо кнопка отослать коменданту).'''
@@ -23,6 +27,8 @@ import threading
 import time
 import os
 import telebot
+import requests
+import re
 
 # Класс для Label
 class MyLabel(tk.Label):
@@ -82,8 +88,9 @@ class Inactivity:
         currentTime = time.time()
         timeDuration = currentTime - self.lastActivityTime
 
-        if timeDuration >= 10:
+        if timeDuration >= 60:
             self.showWarning()
+
 
         # Проверка на неактивность каждые 1000 миллисекунд (1 секунда)
         self.frame.after(1000, self.checkInactivity)
@@ -109,7 +116,7 @@ class MyApp(tk.Tk):
                       "student" : "студент"}
 
         self.protocol("WM_DELETE_WINDOW", self.onClosing)  # Обработчик закрытия окна
-        self.telegramBot = MyTelegramBot()
+        self.telegramBot = MyTelegramBot(self)
         self.chatID = 990537084
 
         self.filePath = "excelFiles//Book1.xlsx"
@@ -117,7 +124,7 @@ class MyApp(tk.Tk):
         if not os.path.exists(self.filePath):
             self.excelObjectFirst = WorkExcel(self, self.filePath)
 
-        self.sortWindowInstance = None
+        self.selected_index = None
 
         # Словарь для хранения записанных дат
         self.dictZapisanye = {}
@@ -131,7 +138,6 @@ class MyApp(tk.Tk):
         self.stringMonthNum = ""
         self.FullConcatenate = ""
 
-        # Нужно
         self.concatenateString = ""
         self.monthUser = ""
 
@@ -148,6 +154,8 @@ class MyApp(tk.Tk):
         self.recordTimes = []
         self.recordFullStrings = []
         self.recordDates = []
+        self.recordYears = []
+        self.studentRecords = []
 
         # Фрейм самого первого Splash окна
         self.frame1 = tk.Frame(self, width=800, height=800)
@@ -155,6 +163,8 @@ class MyApp(tk.Tk):
 
         self.inactivity = Inactivity(self.frame1)
         self.inactivity.startCheck()
+
+        self.sortWindowInstance = None
 
         #Фрейм окна аутентификации
         self.frameAuthentification = tk.Frame(self, width=800, height = 800)
@@ -165,20 +175,24 @@ class MyApp(tk.Tk):
         # Фрейм для окна об авторе
         self.frameAuthor = tk.Frame(self, width=800, height=800)
 
-        self.frameAbtProgramm = tk.Frame(self, width=800, height=800)
+        self.frameAbtProgramm = tk.Frame(self, width=800, height=850)
 
-        self.canvasAbtProgramm = tk.Canvas(self.frameAbtProgramm, width=300, height=800, bg='#9681F0')
+        self.canvasAbtProgramm = tk.Canvas(self.frameAbtProgramm, width=300, height=850, bg='#9681F0')
         self.canvasAbtProgramm.place(x=0, y=0)
 
         self.canvas1 = tk.Canvas(self.frameMain, width=750, height=670, bg='#eedcfc', borderwidth=2, relief='solid')
         self.canvas1.place(x=0, y=50)
 
-        #self.canvasAuthentific = tk.Canvas(self.frameAuthentification, width = 500, height=950, bg = "black")
-        #self.canvasAuthentific.place(x = 160, y = 50)
+        self.frameText = tk.Frame(self.frameMain)
+        self.frameText.place(x=20, y=210, width=600, height=400)
 
-        self.textPlace = tk.Text(self.frameMain, state='normal', font=("Montserrat", 8, 'bold'))
-        self.textPlace.place(x=20, y=210, width=600, height=400)
+        self.textPlace = tk.Text(self.frameText, state='normal', font=("Montserrat", 8, 'bold'))
+        self.textPlace.pack(side="left", fill="both", expand=True)
         self.textPlace.insert(tk.END, f"Фамилия\t\t  Имя\t\tБлок\t\tTелефон\t\t   Дата\t\tВремя\n\n")
+
+        self.scrollBar = tk.Scrollbar(self.frameText, command=self.textPlace.yview)
+        self.scrollBar.pack(side="right", fill="y")
+        self.textPlace.config(yscrollcommand=self.scrollBar.set)
         self.textPlace.config(state='disabled')
         self.textPlace.bind('<ButtonRelease-1>', self.onTextClick)
 
@@ -231,17 +245,19 @@ class MyApp(tk.Tk):
         self.label17 = MyLabel(self.frameAbtProgramm, text='Программа позволяет:', font_size=13, font_weight='bold',
                                x=440, y=90)
 
-        self.label18 = MyLabel(self.frameAbtProgramm, text='1. Записывать ФИО и номер телефона дежурного\n'
-                                                           '2. Сохранять записи в файл\n'
-                                                           '3. Просматривать результат в главном окне\n'
-                                                           '4. Удалять данные о дежурстве\n'
-                                                           '5. Записывать и считывать данные с Excel', font_size=11,
+        self.label18 = MyLabel(self.frameAbtProgramm, text='1. Записывать данные дежурного студента\n'
+                                                           '2. Удалять записи на дежурства\n'
+                                                           '3. Редактировать данные дежурного студента\n'
+                                                           '4. Просматривать результат в главном окне\n'
+                                                           '5. Сохранять записи в файл форматов .docx .xlsx\n'
+                                                           '6. Считывать данные с Excel\n'
+                                                           '7. Отправлять docx файл в Telegram-бот', font_size=11,
                                justify='left', bg='#eddcfc', x=350, y=130)
 
         self.label19 = MyLabel(self.frameAbtProgramm, text='Версия: 1.0.0.2024', font_size=10, x=350, y=710)
 
         # Лейблы с текстом главного окна
-        self.label20 = MyLabel(self.frameMain, text="Данные о жильцах", font_size=11, font_weight='bold', bg='#eedcfc',
+        self.label20 = MyLabel(self.frameMain, text="Запись на дежурство", font_size=11, font_weight='bold', bg='#eedcfc',
                                x=300, y=15)
 
         self.label21 = MyLabel(self.frameMain, text="Фамилия", font_size=10, bg='#eedcfc', x=20, y=70)
@@ -252,7 +268,7 @@ class MyApp(tk.Tk):
 
         self.label24 = MyLabel(self.frameMain, text="Номер телефона", font_size=10, bg='#eedcfc', x=280, y=70)
 
-        self.label24 = MyLabel(self.frameMain, text="Время", font_size=10, bg='#eedcfc', x=280, y=140)
+        self.label24 = MyLabel(self.frameMain, text="Время", font_size=10, bg='#eedcfc', x=400, y=140)
 
         self.label25 = MyLabel(self.frameMain, text="Месяц", font_size=10, bg='#eedcfc', x=150, y=140)
 
@@ -260,19 +276,19 @@ class MyApp(tk.Tk):
 
         self.label27 = MyLabel(self.frameMain, text="Комната", font_size=10, bg='#eedcfc',  x = 540, y = 70)
 
-        self.label28 = MyLabel(self.frameMain, text="Год", font_size=10, bg='#eedcfc', x=400, y=140)
+        self.label28 = MyLabel(self.frameMain, text="Год", font_size=10, bg='#eedcfc', x=280, y=140)
 
-        self.label29 = MyLabel(self.frameAuthentification, text = "Добро пожаловать!", font_size = 18, font_weight='bold', x=290, y=140)
+        self.label29 = MyLabel(self.frameAuthentification, text = "Добро пожаловать!", font_size = 18, font_weight='bold', x=290, y=260)
 
-        self.label30 = MyLabel(self.frameAuthentification, text = "Войдите в программу как комендант/студент", font_size = 10, x = 270, y = 180)
+        self.label30 = MyLabel(self.frameAuthentification, text = "Войдите в программу как комендант/студент", font_size = 10, x = 270, y = 300)
 
-        self.label31 = MyLabel(self.frameAuthentification, text = "Логин", font_size=10, x = 260, y = 240)
+        self.label31 = MyLabel(self.frameAuthentification, text = "Логин", font_size=10, x = 260, y = 360)
 
-        self.label32 = MyLabel(self.frameAuthentification, text = "Пароль", font_size=10, x = 260, y = 310)
+        self.label32 = MyLabel(self.frameAuthentification, text = "Пароль", font_size=10, x = 260, y = 430)
 
-        self.label33 = MyLabel(self.frameAuthentification, text = 'Не комендант?',font_size=9, x = 300, y = 450)
+        self.label33 = MyLabel(self.frameAuthentification, text = 'Не комендант?',font_size=9, x = 300, y = 570)
 
-        self.label34 = MyLabel(self.frameAuthentification, text = 'Войти как студент',font_size=9, font_weight='bold', x = 395, y = 450, cursor = "hand2", fg = '#6F52E6')
+        self.label34 = MyLabel(self.frameAuthentification, text = 'Войти как студент',font_size=9, font_weight='bold', x = 395, y = 570, cursor = "hand2", fg = '#6F52E6')
 
         self.label34.bind("<Button-1>", lambda e: self.fromAuthentificToMainStudent())
 
@@ -295,11 +311,11 @@ class MyApp(tk.Tk):
 
         #Ввод логина
         self.entry5 = tk.Entry(self.frameAuthentification, width=30, font=('Montserrat', 13))
-        self.entry5.place(x = 260, y = 270)
+        self.entry5.place(x = 260, y = 390)
 
         # Ввод пароля
         self.entry6 = tk.Entry(self.frameAuthentification, width=30, font=('Montserrat', 13), show = "*")
-        self.entry6.place(x=260, y=340)
+        self.entry6.place(x=260, y=460)
 
         self.dictForMonthDays = {"Январь": 31,
                                  "Февраль": 28,  # Простой год
@@ -326,16 +342,13 @@ class MyApp(tk.Tk):
         # Ввод дня
         self.comboboxDay = ttk.Combobox(self.frameMain, width=12, state="readonly")
         self.comboboxDay.place(x=20, y=170)
-
         self.comboboxDay.bind("<<ComboboxSelected>>", self.getInfoComboboxDay)
 
         self.comboboxTimeValues = ['8.00 - 10.30', '10.30 - 13.00', '13.00 - 15.30', '15.30 - 18.00', '18.00 - 20.00']
 
         # Ввод времени
         self.comboboxTime = ttk.Combobox(self.frameMain, values=self.comboboxTimeValues, width=11, state="readonly")
-        self.comboboxTime.place(x=280, y=170)
-
-        self.UpdateDays(None)
+        self.comboboxTime.place(x=400, y=170)
 
         # Ввод комнаты
         self.comboboxRoomInBlock = ttk.Combobox(self.frameMain, values=['А', 'Б'], width=11, state='readonly')
@@ -343,7 +356,10 @@ class MyApp(tk.Tk):
 
         #Ввод года
         self.comboboxYear = ttk.Combobox(self.frameMain, values = ['2025'], width=11, state='readonly')
-        self.comboboxYear.place(x = 400, y = 170)
+        self.comboboxYear.place(x = 280, y = 170)
+        self.comboboxYear.bind("<<ComboboxSelected>>", self.onYearChange)
+
+        self.UpdateDays(None)
 
         # ---------------------------------------------------------------------------------------КАРТИНКИ
         self.imageDormitory = tk.PhotoImage(file='images//iconDormitory.png')
@@ -386,9 +402,8 @@ class MyApp(tk.Tk):
                                             y=460)
         self.labelForAbtProgramm6.image = self.imageForAbtProgramm6
 
-
         self.imageForAuthentific = tk.PhotoImage(file = 'images//dormitoryAuth.png')
-        self.labelForAuthentific = MyLabel(self.frameAuthentification, image=self.imageForAuthentific, x=365, y=45)
+        self.labelForAuthentific = MyLabel(self.frameAuthentification, image=self.imageForAuthentific, x=365, y=165)
         self.labelForAuthentific.image = self.imageForAuthentific
 
         # Картинка для кнопки выйти
@@ -432,6 +447,8 @@ class MyApp(tk.Tk):
 
         # Картинка для кнопки отправить коменданту
         self.imageWord = tk.PhotoImage(file='images//word.png')
+
+
         # ---------------------------------------------------------------------------------КАРТИНКИ
 
         # ---------------------------------------------------------------------------------КНОПКИ
@@ -443,17 +460,17 @@ class MyApp(tk.Tk):
         #Кнопка войти
         self.buttonLogIn = MyButton(self.frameAuthentification, text = "Войти", fg='white', width=38, height=2,
                                     font_size=9, font_weight='bold', bg='#8251FE', command=self.fromAuthentificToMainCommandant, x=260,
-                                    y=395)
+                                    y=515)
 
         # Кнопка выход
         if self.frameMain:
             self.buttonExit = MyButton(self.frameMain, text='Выход', width=100, height=30, image=self.imageExit,
-                                       compound=tk.RIGHT, font_size=9, font_weight='bold', command=self.exitApp, x=525,
+                                       compound=tk.RIGHT, font_size=9, font_weight='bold', command=self.exitAppMain, x=525,
                                        y=760)
 
         if self.frame1:
             self.buttonExit = MyButton(self.frame1, text='Выход', width=200, height=45, image=self.imageExit,
-                                       compound=tk.RIGHT, font_size=9, font_weight='bold', command=self.exitApp, x=410,
+                                       compound=tk.RIGHT, font_size=9, font_weight='bold', command=self.exitAppSplash, x=410,
                                        y=700)
 
         # Кнопка назад УНИВЕРСАЛЬНАЯ
@@ -538,6 +555,11 @@ class MyApp(tk.Tk):
                                           x=645, y=210)
         self.buttonCancel.place_forget()
 
+        # Кнопка удаления записи
+        self.buttonDeleteRecord = MyButton(self.frameMain, text='Удалить\nзапись', width=80, height=60, image=self.imageDelete,
+                                      compound=tk.TOP, font_size=9, font_weight='bold', command=self.deleteRecord, x=645,
+                                      y=700)
+        self.buttonDeleteRecord.place_forget()
 
         #--------------------------------------------------------------------------------------------------------------МЕНЮ КНОПКИ
 
@@ -572,8 +594,23 @@ class MyApp(tk.Tk):
         self.destroy() # Закрываем главное окно
 
     # Закрытие окна
-    def exitApp(self):
+    def exitAppMain(self):
+        result = tk.messagebox.askyesnocancel("Выход", "Все несохраненные данные будут удалены.\nВыйти?")
+
+        if result:
+
+            self.destroy()
+
+    def exitAppSplash(self):
         self.destroy()
+
+
+    def checkInternetConnection(self, url='http://www.google.com/', timeout=5):
+        try:
+            requests.get(url, timeout=timeout)
+            return True
+        except requests.ConnectionError:
+            return False
 
     #Проверка правильности ввода логина и пароля
     def checkLoginPassword(self):
@@ -583,7 +620,7 @@ class MyApp(tk.Tk):
 
         if(str(self.userLogin) == "commandant" and str(self.userPassword) == "12345678"): #Селфы можно убрать
             self.user = User(self.userLogin, self.roles["commandant"])
-            tk.messagebox.showinfo("Авторизация", "Вы вошли как комендант!")
+
 
             return True
 
@@ -594,12 +631,23 @@ class MyApp(tk.Tk):
 
             return False
 
-
     # Открытие второго окна (забиндить и добавить эл-ты второго окна в фрейм 2)
     def openAuthentificWindow(self):
         self.frame1.pack_forget()
         self.frameAuthentification.pack()
         self.inactivity.stopCheck()
+
+    def fromSplashToMain(self):
+        self.frame1.pack_forget()
+        self.frameMain.pack()
+        self.inactivity.stopCheck()
+
+    #Существует ли пользователь (для удалении окна со входом)
+    def checkIsUserExists(self):
+
+        if self.user is not None:
+
+            self.buttonStart.config(command = self.fromSplashToMain)
 
     #Открытие главного окна после входа
     def fromAuthentificToMainCommandant(self):
@@ -610,6 +658,8 @@ class MyApp(tk.Tk):
 
             self.frameAuthentification.pack_forget()
             self.frameMain.pack()
+
+            self.checkIsUserExists()
 
         else:
             return
@@ -623,6 +673,8 @@ class MyApp(tk.Tk):
         self.frameMain.pack()
 
         self.checkRoleAndDisplayButtons()
+
+        self.checkIsUserExists()
 
     # Возвращение со второго окна на первое(с основного в Splash)
     def backFromMainto1st(self):
@@ -660,14 +712,12 @@ class MyApp(tk.Tk):
             self.buttonDeleteData.place_forget()
             self.buttonChooseSort.place_forget()
             self.buttonToDocx.place_forget()
+            self.fileMenu.delete(1)
 
             self.buttonToExcel.place(x=645, y=320)
             self.buttonSendToBot.place(x = 645, y = 425)
 
             self.startReading()
-
-            #здесь допиши чтобы по умолчанию у студентов была введена таблица по умолчанию
-
 
         else:
 
@@ -724,6 +774,7 @@ class MyApp(tk.Tk):
         self.Day = self.comboboxDay.get()
         self.Time = self.comboboxTime.get()
         self.Room = self.comboboxRoomInBlock.get()
+        self.Year = self.comboboxYear.get()
 
     def validateInput(self):
         if not self.validateLastName():
@@ -769,25 +820,34 @@ class MyApp(tk.Tk):
         return True
 
     def checkAllFields(self):
+
         self.textPlace.config(state='normal')
+
         if not all([self.lastName, self.firstName, self.Block, self.TelNumber, self.Month, self.Day, self.Time,
-                    self.Room]):
+                    self.Room, self.Year]):
             tk.messagebox.showerror("Ошибка", "Введите все данные!")
             return False
         return True
 
     def processDateAndRecord(self):
+
         self.monthForSort = 0
         for nameOfMonth, MonthNumber in self.DictForMonthes.items():
+
             if self.Month == nameOfMonth:
+
                 if int(self.Day) < 10:
-                    self.concatenateString = "0" + self.Day + "." + MonthNumber
+                    self.concatenateString = "0" + self.Day + "." + MonthNumber + "." + self.Year
+
                 else:
-                    self.concatenateString = self.Day + "." + MonthNumber
+                    self.concatenateString = self.Day + "." + MonthNumber + "." + self.Year
+
                 self.monthForSort = int(MonthNumber)
+
                 self.recordDuty(self.concatenateString, self.Time)
 
     def displayResults(self):
+
         self.fullStringSort = (f"{(str(self.lastName)).capitalize()}\t\t  {(str(self.firstName)).capitalize()}\t\t"
                                f"{str(self.Block) + str(self.Room)}\t\t{str(self.TelNumber)}\t\t   {str(self.concatenateString)}\t\t{str(self.Time)}\n")
         self.textPlace.insert(tk.END,
@@ -795,9 +855,17 @@ class MyApp(tk.Tk):
                               f"{str(self.Block) + str(self.Room)}\t\t{str(self.TelNumber)}\t\t   {str(self.concatenateString)}\t\t{str(self.Time)}\n")
         self.textPlace.config(state='disabled')
 
+    def onYearChange(self, event):
+        self.updateAvailableTimes()
+
     def UpdateDays(self, event):
+
         self.monthUser = self.comboboxMonth.get()
         current_day = self.comboboxDay.get()
+
+        self.comboboxTime.config(state = 'normal')
+        self.comboboxTime.delete(0, tk.END)
+        self.comboboxTime.config(state='readonly')
 
         # Изначально устанавливаем 31 день
         self.days = [str(i) for i in range(1, 32)]
@@ -818,10 +886,16 @@ class MyApp(tk.Tk):
         self.updateAvailableTimes()
 
     def updateAvailableTimes(self):
+
         stringForDay = self.comboboxDay.get()
         stringForMonth = self.comboboxMonth.get()
+        stringForYear = self.comboboxYear.get()
 
-        if not stringForDay:  # Проверка на пустую строку
+        self.comboboxTime.config(state='normal')
+        self.comboboxTime.delete(0, tk.END)
+        self.comboboxTime.config(state='readonly')
+
+        if not stringForDay or not stringForMonth or not stringForYear:  # Проверка на пустую строку
             self.comboboxTime['values'] = self.comboboxTimeValues
             return
 
@@ -829,9 +903,9 @@ class MyApp(tk.Tk):
         for nameOfMonth, MonthNumber in self.DictForMonthes.items():
             if stringForMonth == nameOfMonth:
                 if int(stringForDay) < 10:
-                    self.FullConcatenate = "0" + stringForDay + "." + MonthNumber
+                    self.FullConcatenate = "0" + stringForDay + "." + MonthNumber + "." + stringForYear
                 else:
-                    self.FullConcatenate = stringForDay + "." + MonthNumber
+                    self.FullConcatenate = stringForDay + "." + MonthNumber + "." + stringForYear
 
         if self.FullConcatenate:
             if self.FullConcatenate in self.dictZapisanye:
@@ -848,7 +922,6 @@ class MyApp(tk.Tk):
         else:
             self.dictZapisanye[date] = [time]
 
-    # Запись данных в списки (типо для блоков к примеру свой отдельный список и тд) (для реализации сортировки)
     def recordData(self):
 
         self.recordBlocks.append(self.Block)
@@ -861,6 +934,7 @@ class MyApp(tk.Tk):
         self.recordTelNumber.append(self.TelNumber)
         self.recordDates.append(self.concatenateString)
         self.recordTimes.append(self.Time)
+        self.recordYears.append(self.Year)
 
     # Удаление всех данных
     def deleteAllData(self):
@@ -901,6 +975,7 @@ class MyApp(tk.Tk):
         # Скрытие кнопок сохранения изменений и отмены
         self.buttonSaveChanges.place_forget()
         self.buttonCancel.place_forget()
+        self.buttonDeleteRecord.place_forget()
 
         # Возвращение кнопок на исходные позиции
         self.buttonZapisat.place(x=645, y=100)
@@ -924,9 +999,78 @@ class MyApp(tk.Tk):
         self.buttonChooseSort.place_forget()
         self.buttonClear.place_forget()
         self.buttonToDocx.place_forget()
+        self.buttonSendToBot.place_forget()
 
         self.buttonSaveChanges.place(x = 645, y = 100)
         self.buttonCancel.place(x = 645, y = 210)
+
+        if self.user.role == "комендант":
+            self.buttonDeleteRecord.place(x = 645, y = 320)
+
+    def deleteRecord(self):
+        if hasattr(self, 'selected_index') and self.selected_index is not None:
+            index = self.selected_index
+            row_index = int(index.split('.')[0]) - 3  # Корректировка для учета первых двух строк
+
+            # Проверка роли пользователя
+            if self.user.role == "комендант":
+                # Получение старого времени и даты для удаления из словаря
+                old_date_str = self.recordDates[row_index]
+                old_time = self.recordTimes[row_index]
+                self.removeDuty(old_date_str, old_time)
+
+                # Определение, является ли удаляемая запись последней
+                is_last_record = (row_index == len(self.recordFullStrings) - 1)
+
+                if not is_last_record:
+                    # Перемещение последней строки на место удаленной
+                    self.recordSecondNames[row_index] = self.recordSecondNames[-1]
+                    self.recordFirstNames[row_index] = self.recordFirstNames[-1]
+                    self.recordBlocks[row_index] = self.recordBlocks[-1]
+                    self.recordRooms[row_index] = self.recordRooms[-1]
+                    self.recordTelNumber[row_index] = self.recordTelNumber[-1]
+                    self.recordDays[row_index] = self.recordDays[-1]
+                    self.recordMonthes[row_index] = self.recordMonthes[-1]
+                    self.recordYears[row_index] = self.recordYears[-1]
+                    self.recordDates[row_index] = self.recordDates[-1]
+                    self.recordTimes[row_index] = self.recordTimes[-1]
+                    self.recordFullStrings[row_index] = self.recordFullStrings[-1]
+
+                # Удаление последней записи
+                self.recordSecondNames.pop()
+                self.recordFirstNames.pop()
+                self.recordBlocks.pop()
+                self.recordRooms.pop()
+                self.recordTelNumber.pop()
+                self.recordDays.pop()
+                self.recordMonthes.pop()
+                self.recordYears.pop()
+                self.recordDates.pop()
+                self.recordTimes.pop()
+                self.recordFullStrings.pop()
+
+                # Удаление строки из textPlace
+                self.textPlace.config(state='normal')
+                self.textPlace.delete("%s linestart" % index, "%s lineend" % index)
+
+                # Перезапись всех строк для обновления отображения, сохраняя первую пустую строку
+                self.textPlace.delete('3.0', tk.END)
+                self.textPlace.insert('2.0', "\n")
+                for i in range(len(self.recordFullStrings)):
+                    self.textPlace.insert(f"{i + 3}.0", self.recordFullStrings[i] + "\n")
+
+                self.textPlace.config(state='disabled')
+
+                # Очистка выбранного индекса
+                self.selected_index = None
+                messagebox.showinfo("Удаление записи", "Запись успешно удалена.")
+
+                self.cancelChange()
+
+            else:
+                messagebox.showwarning("Доступ запрещен", "У вас нет прав для удаления записей.")
+        else:
+            messagebox.showwarning("Удаление записи", "Пожалуйста, выберите запись для удаления.")
 
     #Функция получения данных при нажатии на текст
     def onTextClick(self, event):
@@ -941,15 +1085,10 @@ class MyApp(tk.Tk):
         line_content = self.textPlace.get("%s linestart" % index, "%s lineend" % index).strip()
         self.textPlace.config(state='disabled')
 
-        print(f"Index: {index}, Line Content: {line_content.strip()}")
-
         parts = line_content.split()
-        if len(parts) >= 7:
+        if len(parts) >= 8:  # Обновлено для учета года
             try:
                 row_index = int(index.split('.')[0]) - 3  # Корректировка для учета первых двух строк
-                print(f"Row Index: {row_index}")
-                print(
-                    f"List Lengths: {len(self.recordSecondNames)}, {len(self.recordFirstNames)}, {len(self.recordBlocks)}, {len(self.recordRooms)}, {len(self.recordTelNumber)}, {len(self.recordDays)}, {len(self.recordMonthes)}, {len(self.recordDates)}, {len(self.recordTimes)}")
 
                 if row_index >= 0 and row_index < len(self.recordSecondNames):
                     lastName = self.recordSecondNames[row_index].strip()
@@ -961,20 +1100,26 @@ class MyApp(tk.Tk):
                         self.recordDays) else '01'  # Проверка на наличие дня
                     month = self.recordMonthes[row_index] if row_index < len(
                         self.recordMonthes) else 1  # Проверка на наличие месяца
+                    year = self.recordYears[row_index] if row_index < len(
+                        self.recordYears) else '2023'  # Проверка на наличие года
                     date_str = self.recordDates[row_index].strip()
                     time = self.recordTimes[row_index].strip()
 
                     # Форматируем месяц как строку с двумя цифрами
                     month_str = f"{month:02}"
-                    print(f"Day: {day}, Month: {month_str}, Date: {date_str}, Time: {time}")
+
+                    if self.user.role == "студент":
+                        formatted_record = f"{lastName.capitalize()}\t\t  {firstName.capitalize()}\t\t{block}{room}\t\t{telNumber}\t\t   {day}.{month_str}.{year}\t\t{time}\n"
+                        if formatted_record not in self.studentRecords:
+                            tk.messagebox.showerror("Редактирование", "Ваша роль не позволяет изменять чужие записи")
+                            return
 
                     self.comboboxDay.set(day)
                     month_name = next((key for key, value in self.DictForMonthes.items() if value == month_str), None)
                     if month_name:
                         self.comboboxMonth.set(month_name)
-                    else:
-                        print(f"Не удалось найти соответствие для месяца: {month_str}")
 
+                    self.comboboxYear.set(year)
                     self.comboboxTime.set(time)
                     self.updateAvailableTimes()
 
@@ -1028,14 +1173,6 @@ class MyApp(tk.Tk):
             except ValueError:
                 print("Не удалось преобразовать индекс строки в целое число")
 
-    def removeDuty(self, date, time):
-        if date in self.dictZapisanye:
-            if time in self.dictZapisanye[date]:
-                self.dictZapisanye[date].remove(time)
-                if not self.dictZapisanye[date]:  # Удаление даты, если нет занятых временных слотов
-                    del self.dictZapisanye[date]
-
-    #Функция сохранения изменений
     def saveChanges(self):
         # Получаем обновленные данные из полей
         lastName = self.entry1.get().strip()
@@ -1045,8 +1182,9 @@ class MyApp(tk.Tk):
         telNumber = self.entry4.get().strip()
         day = self.comboboxDay.get().strip().zfill(2)  # Сохраняем ведущий ноль
         month = next(value for key, value in self.DictForMonthes.items() if self.comboboxMonth.get() == key)
+        year = self.comboboxYear.get().strip()
         time = self.comboboxTime.get().strip()
-        date_str = f"{day}.{month}"
+        date_str = f"{day}.{month}.{year}"
 
         # Проверка на корректность ввода фамилии
         if any(symbol.isdigit() or symbol in "_-+=!@#$%*^()&?~/., " for symbol in lastName):
@@ -1077,13 +1215,13 @@ class MyApp(tk.Tk):
             return
 
         # Проверка все ли поля введены
-        if not all([lastName, firstName, block, telNumber, month, day, time, room]):
+        if not all([lastName, firstName, block, telNumber, month, day, time, room, year]):
             messagebox.showerror("Ошибка", "Введите все данные!")
             self.removeArrowAndHighlight(self.selected_index)
             return
 
-        # Формирование обновленной строки
-        updated_line = f"{lastName.capitalize()}\t\t  {firstName.capitalize()}\t\t{block}{room}\t\t{telNumber}\t\t   {date_str}\t\t{time} ←"
+        # Формирование обновленной строки без стрелочки
+        updated_line = f"{lastName.capitalize()}\t\t  {firstName.capitalize()}\t\t{block}{room}\t\t{telNumber}\t\t   {date_str}\t\t{time}"
 
         # Определение текущего индекса строки
         if self.selected_index:
@@ -1112,6 +1250,7 @@ class MyApp(tk.Tk):
                 self.recordTelNumber[row_index] = telNumber
                 self.recordDays[row_index] = int(day)
                 self.recordMonthes[row_index] = month
+                self.recordYears[row_index] = year
                 self.recordDates[row_index] = date_str
                 self.recordTimes[row_index] = time
                 self.recordFullStrings[row_index] = updated_line
@@ -1125,7 +1264,15 @@ class MyApp(tk.Tk):
             self.removeArrowAndHighlight(index)
             self.selected_index = None
 
-    #Функция убирающая подсветку текста и стрелочку
+    def removeDuty(self, date, time):
+        if date in self.dictZapisanye:
+            if time in self.dictZapisanye[date]:
+                self.dictZapisanye[date].remove(time)
+                if not self.dictZapisanye[date]:  # Удаление даты, если нет занятых временных слотов
+                    del self.dictZapisanye[date]
+
+        # Функция убирающая подсветку текста и стрелочку
+
     def removeArrowAndHighlight(self, index):
         if index is not None:
             line_content = self.textPlace.get("%s linestart" % index, "%s lineend" % index).strip()
@@ -1135,14 +1282,12 @@ class MyApp(tk.Tk):
                 self.textPlace.delete("%s linestart" % index, "%s lineend" % index)
                 self.textPlace.insert("%s linestart" % index, updated_line)
                 self.textPlace.tag_remove("highlight", "%s linestart" % index, "%s lineend" % index)
-                self.textPlace.config(state='disabled')
 
     #Функция вызывающая функцию сохранения изменений и позиционирующая кнопки
     def saveAndPlace(self):
 
         self.saveChanges()
         self.cancelChange()
-
 
     #Функция записывающая данные в Excel
     def infoToExcel(self):
@@ -1205,8 +1350,7 @@ class MyApp(tk.Tk):
 
         self.readFromExcel()
 
-
-    #Считывание данных с Excel
+    # Считывание данных с Excel
     def readFromExcel(self):
 
         expectedHeaders = ['Фамилия', 'Имя', 'Блок', 'Комната', 'Номер', 'Дата', 'Время']
@@ -1224,8 +1368,9 @@ class MyApp(tk.Tk):
         self.recordFirstNames.clear()
         self.recordDates.clear()
         self.recordTimes.clear()
-        self.recordDays.clear()  # Добавим очистку списка recordDays
-        self.recordMonthes.clear()  # Добавим очистку списка recordMonthes
+        self.recordDays.clear()  # Очистка списка recordDays
+        self.recordMonthes.clear()  # Очистка списка recordMonthes
+        self.recordYears.clear()  # Очистка списка recordYears
         self.dictZapisanye.clear()
 
         for row in self.activeList.iter_rows(min_row=2, max_row=self.activeList.max_row, min_col=1,
@@ -1238,10 +1383,11 @@ class MyApp(tk.Tk):
             self.recordDates.append(row[5])
             self.recordTimes.append(row[6])
 
-            # Добавим извлечение дня и месяца из даты и занесем в соответствующие списки
-            day, month = map(int, row[5].split('.'))
+            # Добавим извлечение дня, месяца и года из даты и занесем в соответствующие списки
+            day, month, year = map(int, row[5].split('.'))
             self.recordDays.append(day)
             self.recordMonthes.append(month)
+            self.recordYears.append(year)
 
             # Формирование полной строки и добавление в recordFullStrings
             full_string = f"{row[0].capitalize()}\t\t  {row[1].capitalize()}\t\t{row[2]}{row[3]}\t\t{row[4]}\t\t   {row[5]}\t\t{row[6]}"
@@ -1289,7 +1435,7 @@ class MyApp(tk.Tk):
         self.document.add_heading("Данные о записях на дежурство", 0)
 
         # Добавляем таблицу в документ
-        table = self.document.add_table(rows=1, cols=7)
+        table = self.document.add_table(rows=1, cols=8)
 
         # Определяем заголовки таблицы
         hdr_cells = table.rows[0].cells
@@ -1299,7 +1445,8 @@ class MyApp(tk.Tk):
         hdr_cells[3].text = 'Комната'
         hdr_cells[4].text = 'Номер'
         hdr_cells[5].text = 'Дата'
-        hdr_cells[6].text = 'Время'
+        hdr_cells[6].text = 'Год'
+        hdr_cells[7].text = 'Время'
 
         # Заполняем таблицу данными
         for i in range(len(self.recordBlocks)):
@@ -1311,6 +1458,7 @@ class MyApp(tk.Tk):
                 self.recordRooms[i],
                 self.recordTelNumber[i],
                 self.recordDates[i],
+                self.recordYears[i],  # Добавляем год
                 self.recordTimes[i]
             ]
 
@@ -1350,11 +1498,10 @@ class SortWindow():
 
         self.sortWindow = tk.Toplevel(frame)
 
-        #self.inactivity = Inactivity(frame)
-
         self.sortWindow.title("Выбор сортировки")
         self.sortWindow.geometry("500x500")
         self.sortWindow.geometry('+700+300')
+        self.sortWindow.resizable(width=False, height=False)
 
         self.canvasSort1 = tk.Canvas(self.sortWindow, width=150, height=500, bg="#9681F0")
         self.canvasSort1.place(x=0, y=0)
@@ -1392,7 +1539,7 @@ class SortWindow():
 
         self.comboboxSort = ttk.Combobox(self.sortWindow, values=['В алфавитном порядке (от А до Я)', 'В алфавитном порядке (от Я до А)', 'По возрастанию блоков',
                                                                   'По убыванию блоков', 'По дате'], width=30,
-                                         font=('Montserrat', 10, 'bold'))
+                                         font=('Montserrat', 10, 'bold'), state = "readonly")
         self.comboboxSort.place(x=200, y=80)
         self.comboboxSort.bind("<<ComboboxSelected>>", self.uploadExamples)
 
@@ -1422,6 +1569,8 @@ class SortWindow():
         self.textExampleSort.delete("0.0", tk.END)
 
         self.textExampleSort.insert("end", "\n\n")
+
+        self.comboboxSort.config(state = 'normal')
 
         self.selectedSort = self.comboboxSort.get()
 
@@ -1550,6 +1699,7 @@ class SortWindow():
 
     # Функция сортировки по возрастанию блоков
     def sortUpBlocks(self):
+        self.parent.removeArrowAndHighlight(self.parent.selected_index)
         # Создание списка кортежей (блок, индекс)
         combined_list = list(enumerate(self.parent.recordBlocks))
         # Сортировка по блокам
@@ -1562,13 +1712,13 @@ class SortWindow():
 
         # Вставляем отсортированные строки в textPlace
         for index, _ in sorted_combined_list:
-            fullString = self.parent.recordFullStrings[index] + "\n"
-            self.parent.textPlace.insert(tk.END, fullString)
+            fullString = self.parent.recordFullStrings[index].strip()  # Удаление лишних пробелов и переносов строк
+            self.parent.textPlace.insert(tk.END, fullString + "\n")
 
         self.parent.textPlace.config(state='disabled')
 
-    # Функция сортировки по возрастанию блоков
     def sortDownBlocks(self):
+        self.parent.removeArrowAndHighlight(self.parent.selected_index)
         # Создание списка кортежей (блок, индекс)
         combined_list = list(enumerate(self.parent.recordBlocks))
         # Сортировка по блокам
@@ -1581,13 +1731,13 @@ class SortWindow():
 
         # Вставляем отсортированные строки в textPlace
         for index, _ in sorted_combined_list:
-            fullString = self.parent.recordFullStrings[index] + "\n"
-            self.parent.textPlace.insert(tk.END, fullString)
+            fullString = self.parent.recordFullStrings[index].strip()  # Удаление лишних пробелов и переносов строк
+            self.parent.textPlace.insert(tk.END, fullString + "\n")
 
         self.parent.textPlace.config(state='disabled')
 
-    # Сортировка в алфавитном порядке
     def sortByAlphabetUp(self):
+        self.parent.removeArrowAndHighlight(self.parent.selected_index)
         # Сортируем полный список строк по алфавиту
         sortedAlphabetical = sorted(self.parent.recordFullStrings)
 
@@ -1596,11 +1746,12 @@ class SortWindow():
         self.parent.textPlace.insert('2.0', "\n")
 
         for string in sortedAlphabetical:
-            self.parent.textPlace.insert(tk.END, string + "\n")
+            self.parent.textPlace.insert(tk.END, string.strip() + "\n")  # Удаление лишних пробелов и переносов строк
 
         self.parent.textPlace.config(state='disabled')
 
     def sortByAlphabetDown(self):
+        self.parent.removeArrowAndHighlight(self.parent.selected_index)
         # Сортируем полный список строк по алфавиту в обратном порядке
         sortedAlphabetical = sorted(self.parent.recordFullStrings, reverse=True)
 
@@ -1609,11 +1760,12 @@ class SortWindow():
         self.parent.textPlace.insert('2.0', "\n")
 
         for string in sortedAlphabetical:
-            self.parent.textPlace.insert(tk.END, string + "\n")
+            self.parent.textPlace.insert(tk.END, string.strip() + "\n")  # Удаление лишних пробелов и переносов строк
 
         self.parent.textPlace.config(state='disabled')
 
     def sortByData(self):
+        self.parent.removeArrowAndHighlight(self.parent.selected_index)
         # Создание списка кортежей (месяц, день, индекс)
         combined_list = list(enumerate(zip(self.parent.recordMonthes, self.parent.recordDays)))
 
@@ -1630,11 +1782,14 @@ class SortWindow():
 
         # Вставляем отсортированные строки в textPlace
         for index, _ in sorted_combined_list:
-            fullString = self.parent.recordFullStrings[index] + "\n"
-            self.parent.textPlace.insert(tk.END, fullString)
+            if index < len(self.parent.recordFullStrings):
+                fullString = self.parent.recordFullStrings[index].strip()  # Удаление лишних пробелов и переносов строк
+                self.parent.textPlace.insert(tk.END, fullString + "\n")
+            else:
+                print(
+                    f"Индекс {index} выходит за пределы списка recordFullStrings длиной {len(self.parent.recordFullStrings)}")  # Отладочное сообщение
 
         self.parent.textPlace.config(state='disabled')
-
 
 #endregion
 
@@ -1648,7 +1803,7 @@ class HelpWindow():
         self.helpWindow = tk.Toplevel(frame)
 
         self.helpWindow.title("Использование")
-        self.helpWindow.geometry("600x600")
+        self.helpWindow.geometry("600x400")
         self.helpWindow.geometry("+630+270")
         self.helpWindow.resizable(width = False, height=False)
 
@@ -1656,26 +1811,173 @@ class HelpWindow():
         self.frameHelp1.place(x = 0, y = 0)
 
         self.frameHelp2 = tk.Frame(self.helpWindow, width=600, height=600)
+        self.frameHelp3 = tk.Frame(self.helpWindow, width=600, height=600)
+        self.frameHelp4 = tk.Frame(self.helpWindow, width=600, height=600)
+        self.frameHelp5 = tk.Frame(self.helpWindow, width=600, height=600)
+        self.frameHelp6 = tk.Frame(self.helpWindow, width=600, height=600)
+        self.frameHelp7 = tk.Frame(self.helpWindow, width=600, height=600)
 
         self.canvasHelp1 = tk.Canvas(self.frameHelp1, width=130, height=600, bg='#9681F0')
         self.canvasHelp1.place(x = 470, y = 0)
 
-        self.labelHelp1 = tk.Label(self.frameHelp1, text = "Шаг 1", font = ("Montserrat", 14, 'bold'))
-        self.labelHelp1.place(x = 180, y = 25)
+        self.canvasHelp2 = tk.Canvas(self.frameHelp2, width=130, height=600, bg='#9681F0')
+        self.canvasHelp2.place(x=470, y=0)
 
-        self.labelHelp1 = tk.Label(self.frameHelp1, text="Заполните все поля корректными данными и нажмите кнопку 'Записаться'\n"
-                                                         "В случае ввода некорректных данных будет выдана ошибка.\n"
-                                                         "В случае незаполнения всех полей так же будет выдана ошибка", font=("Montserrat", 10), justify = "left")
-        self.labelHelp1.place(x=10, y=400)
+        self.canvasHelp3 = tk.Canvas(self.frameHelp3, width=130, height=600, bg='#9681F0')
+        self.canvasHelp3.place(x=470, y=0)
 
-        if self.frameHelp1:
+        self.canvasHelp4 = tk.Canvas(self.frameHelp4, width=130, height=600, bg='#9681F0')
+        self.canvasHelp4.place(x=470, y=0)
 
-            self.buttonNextHelp = MyButton(self.frameHelp1, text = "Далее", width=10, height=2,  x = 350, y = 500, command = self.fromHelp1ToHelp2)
+        self.canvasHelp5 = tk.Canvas(self.frameHelp5, width=130, height=600, bg='#9681F0')
+        self.canvasHelp5.place(x=470, y=0)
+
+        self.canvasHelp6 = tk.Canvas(self.frameHelp6, width=130, height=600, bg='#9681F0')
+        self.canvasHelp6.place(x=470, y=0)
+
+        self.canvasHelp7 = tk.Canvas(self.frameHelp7, width=130, height=600, bg='#9681F0')
+        self.canvasHelp7.place(x=470, y=0)
+
+        self.labelHelp1 = tk.Label(self.frameHelp1, text = "Кнопка 'Записаться'", font = ("Montserrat", 13, 'bold'))
+        self.labelHelp1.place(x = 170, y = 25)
+
+        self.labelHelp11 = tk.Label(self.frameHelp1, text="Данная кнопка позволяет пользователю записаться на дежурство\n"
+                                                         "в случае заполнения всех полей корректными данными.\n\n"
+                                                         "При незаполнении каких-либо полей или некорректном их заполнении\n"
+                                                         "Программа выдаст пользователю соответствующую ошибку.\n\n"
+                                                         "Результат записи можно увидеть в главном окне. Все записи\n"
+                                                         "будут расположены упорядоченно и удобно для чтения.\n\n"
+                                                          "Доступ : студент, комендант", font=("Montserrat", 10), justify = "left")
+        self.labelHelp11.place(x=30, y=100)
+
+        self.labelHelp2 = tk.Label(self.frameHelp2, text="Кнопка 'Очистить ввод'", font=("Montserrat", 13, 'bold'))
+        self.labelHelp2.place(x=170, y=25)
+
+        self.labelHelp22 = tk.Label(self.frameHelp2, text = "Данная кнопка позволяет очищать все поля записей\n"
+                                                            "независимо от корректности ввода данных пользователем.\n\n"
+                                                            "Доступ : студент, комендант", font=("Montserrat", 10), justify = "left")
+        self.labelHelp22.place(x = 30, y = 100)
+
+        self.labelHelp3 = tk.Label(self.frameHelp3, text="Кнопка 'Удалить данные'", font=("Montserrat", 13, 'bold'))
+        self.labelHelp3.place(x=170, y=25)
+
+        self.labelHelp33 = tk.Label(self.frameHelp3, text="Данная кнопка позволяет очищать все записанные данные в\n"
+                                                          "приложении без возможности возврата.\n\nДоступ : комендант",
+                                    font=("Montserrat", 10), justify="left")
+        self.labelHelp33.place(x=30, y=100)
+
+        self.labelHelp4 = tk.Label(self.frameHelp4, text="Кнопка 'Сохранить в Excel'", font=("Montserrat", 13, 'bold'))
+        self.labelHelp4.place(x=170, y=25)
+
+        self.labelHelp44 = tk.Label(self.frameHelp4, text="Данная кнопка позволяет записывать данные в Excel файл.\n"
+                                                          "Пользователю предлагается выбрать самим файл для записи.\n"
+                                                          "Если файла по умолчанию нет, он создастся в папке с проектом.\n\n"
+                                                          "Доступ : студент, комендант", font=("Montserrat", 10), justify="left")
+        self.labelHelp44.place(x=30, y=100)
+
+        self.labelHelp5 = tk.Label(self.frameHelp5, text="Кнопка 'Сохранить в Word'", font=("Montserrat", 13, 'bold'))
+        self.labelHelp5.place(x=170, y=25)
+
+        self.labelHelp55 = tk.Label(self.frameHelp5, text="Данная кнопка позволяет записывать данные в Word файл.\n"
+                                                          "Если файла по умолчанию нет, он создастся в папке с проектом.\n\n"
+                                                          "Доступ : студент, комендант", font=("Montserrat", 10), justify="left")
+        self.labelHelp55.place(x=30, y=100)
+
+        self.labelHelp6 = tk.Label(self.frameHelp6, text="Кнопка 'Отправить коменданту'", font=("Montserrat", 13, 'bold'))
+        self.labelHelp6.place(x=170, y=25)
+
+        self.labelHelp66 = tk.Label(self.frameHelp6, text="Данная кнопка позволяет отправлять файл формата .docx\n"
+                                                          "с текущими записанными данными о дежурстве в телеграмм - бот\n\n"
+                                                          "Доступ : студент", font=("Montserrat", 10), justify="left")
+        self.labelHelp66.place(x=30, y=100)
+
+        self.labelHelp7 = tk.Label(self.frameHelp7, text="Кнопка 'Выбрать сортировку'",
+                                   font=("Montserrat", 13, 'bold'))
+        self.labelHelp7.place(x=170, y=25)
+
+        self.labelHelp77 = tk.Label(self.frameHelp7, text="Данная кнопка открывает окно, где пользователю\n предлагается"
+                                                          "выбрать варианты сортировки.\n\nВ случае успешной сортировки\n"
+                                                          "изменения появятся в главном окне.\n"
+                                                          "Eсли недостаточно данных для сортировки, будет выдана ошибка.\n\n"
+                                                          "Доступ : комендант", font=("Montserrat", 10), justify="left")
+        self.labelHelp77.place(x=30, y=100)
+
+
+        self.addNavigationButtons()
+
+    def addNavigationButtons(self):
+
+        MyButton(self.frameHelp1, text="Далее", width=10, height=2, x=350, y=300, command=self.fromHelp1ToHelp2)
+        MyButton(self.frameHelp2, text="Назад", width=10, height=2, x=50, y=300, command=self.fromHelp2ToHelp1)
+
+        MyButton(self.frameHelp2, text="Далее", width=10, height=2, x=350, y=300, command=self.fromHelp2ToHelp3)
+        MyButton(self.frameHelp2, text="Назад", width=10, height=2, x=50, y=300, command=self.fromHelp2ToHelp1)
+
+        MyButton(self.frameHelp3, text="Далее", width=10, height=2, x=350, y=300, command=self.fromHelp3ToHelp4)
+        MyButton(self.frameHelp3, text="Назад", width=10, height=2, x=50, y=300, command=self.fromHelp3ToHelp2)
+
+        MyButton(self.frameHelp4, text="Далее", width=10, height=2, x=350, y=300, command=self.fromHelp4ToHelp5)
+        MyButton(self.frameHelp4, text="Назад", width=10, height=2, x=50, y=300, command=self.fromHelp4ToHelp3)
+
+        MyButton(self.frameHelp5, text="Далее", width=10, height=2, x=350, y=300, command=self.fromHelp5ToHelp6)
+        MyButton(self.frameHelp5, text="Назад", width=10, height=2, x=50, y=300, command=self.fromHelp5ToHelp4)
+
+        MyButton(self.frameHelp6, text="Далее", width=10, height=2, x=350, y=300, command=self.fromHelp6ToHelp7)
+        MyButton(self.frameHelp6, text="Назад", width=10, height=2, x=50, y=300, command=self.fromHelp6ToHelp5)
+
+        MyButton(self.frameHelp7, text="Назад", width=10, height=2, x=50, y=300, command=self.fromHelp7ToHelp6)
+        MyButton(self.frameHelp7, text="Выход", width=10, height=2, x=350, y=300, command=self.closeWindowHelp)
 
     def fromHelp1ToHelp2(self):
         self.frameHelp1.pack_forget()
         self.frameHelp2.pack()
 
+    def fromHelp2ToHelp3(self):
+        self.frameHelp2.pack_forget()
+        self.frameHelp3.pack()
+
+    def fromHelp2ToHelp1(self):
+        self.frameHelp2.pack_forget()
+        self.frameHelp1.pack()
+
+    def fromHelp3ToHelp2(self):
+        self.frameHelp3.pack_forget()
+        self.frameHelp2.pack()
+
+    def fromHelp3ToHelp4(self):
+        self.frameHelp3.pack_forget()
+        self.frameHelp4.pack()
+
+    def fromHelp4ToHelp5(self):
+        self.frameHelp4.pack_forget()
+        self.frameHelp5.pack()
+
+    def fromHelp4ToHelp3(self):
+        self.frameHelp4.pack_forget()
+        self.frameHelp3.pack()
+
+    def fromHelp5ToHelp6(self):
+        self.frameHelp5.pack_forget()
+        self.frameHelp6.pack()
+
+    def fromHelp5ToHelp4(self):
+        self.frameHelp5.pack_forget()
+        self.frameHelp4.pack()
+
+    def fromHelp6ToHelp7(self):
+        self.frameHelp6.pack_forget()
+        self.frameHelp7.pack()
+
+    def fromHelp6ToHelp5(self):
+        self.frameHelp6.pack_forget()
+        self.frameHelp5.pack()
+
+    def fromHelp7ToHelp6(self):
+        self.frameHelp7.pack_forget()
+        self.frameHelp6.pack()
+
+    def closeWindowHelp(self):
+        self.helpWindow.destroy()
 
 #Класс для работы с Excel
 class WorkExcel():
@@ -1733,34 +2035,41 @@ class WorkExcel():
 
                 self.wb.save(self.filepath)
 
-#Класс работы с телеграм-ботом
-class MyTelegramBot():
+# Класс работы с телеграм-ботом
+class MyTelegramBot:
 
-    def __init__(self):
+    def __init__(self, parent):
+
+        self.parent = parent
 
         self.bot = telebot.TeleBot('7931036017:AAF-C7LUTnueZ1Mgftg8uw1j0YjpH76rzZ0')
 
-        @self.bot.message_handler(commands = ['start'])
+        @self.bot.message_handler(commands=['start'])
         def startFunc(message):
-            self.bot.send_message(message.chat.id, f"Здравствуйте {message.from_user.first_name}.Данный бот разработан студентом БНТУ ФИТР гр. 10701123 Жоровым Е.А"
-                                                   " для отправки файлов с данными о записях на дежурство в общежитии")
+            if self.parent.checkInternetConnection():
+                self.bot.send_message(message.chat.id, f"Здравствуйте {message.from_user.first_name}. Данный бот разработан студентом БНТУ ФИТР гр. 10701123 Жоровым Е.А для отправки файлов с данными о записях на дежурство в общежитии")
 
         @self.bot.message_handler(commands=['about'])
         def abtProgram(message):
-            self.bot.send_message(message.chat.id,"Здравствуйте. Данный бот разработан студентом БНТУ ФИТР гр. 10701123 Жоровым Е.А"
-                                  " для отправки файлов с данными о записях на дежурство в общежитии")
+            if self.parent.checkInternetConnection():
+                self.bot.send_message(message.chat.id, "Здравствуйте. Данный бот разработан студентом БНТУ ФИТР гр. 10701123 Жоровым Е.А для отправки файлов с данными о записях на дежурство в общежитии")
+
 
         @self.bot.message_handler(commands=['id'])
-        def abtProgram(message):
-            self.bot.send_message(message.chat.id,message.chat.id)
+        def getID(message):
+            if self.parent.checkInternetConnection():
+                self.bot.send_message(message.chat.id, message.chat.id)
 
     def sendDocument(self, chat_id, file_path):
-
-        with open(file_path, 'rb') as file:
-            self.bot.send_document(chat_id, file)
+        if self.parent.checkInternetConnection():
+            with open(file_path, 'rb') as file:
+                self.bot.send_document(chat_id, file)
+        else:
+            tk.messagebox.showerror("Ошибка", "Отсутсвует подключение к интернету")
 
     def runBot(self):
         self.bot.infinity_polling()
+
 
 def runTelegramBot(bot_instance):
     bot_instance.runBot()

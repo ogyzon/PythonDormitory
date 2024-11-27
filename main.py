@@ -173,12 +173,21 @@ class MyApp(tk.Tk):
         self.frameMain = tk.Frame(self, width=800, height=800)
 
         # Фрейм для окна об авторе
-        self.frameAuthor = tk.Frame(self, width=800, height=800)
+        self.frameAuthor = tk.Frame(self, width=800, height=850)
 
         self.frameAbtProgramm = tk.Frame(self, width=800, height=850)
 
         self.canvasAbtProgramm = tk.Canvas(self.frameAbtProgramm, width=300, height=850, bg='#9681F0')
         self.canvasAbtProgramm.place(x=0, y=0)
+
+        self.canvasAbtAuthor = tk.Canvas(self.frameAuthor, width=300, height=550, bg='#e3e2e1')
+        self.canvasAbtAuthor.place(x=40, y=150)
+
+        self.canvasAbtAuthor2 = tk.Canvas(self.frameAuthor, width=230, height=230)
+        self.canvasAbtAuthor2.place(x=75, y=420)
+
+        self.canvasAbtAuthor3 = tk.Canvas(self.frameAuthor, width=170, height=3, bg='#6F52E6')
+        self.canvasAbtAuthor3.place(x=520, y=163)
 
         self.canvas1 = tk.Canvas(self.frameMain, width=750, height=670, bg='#eedcfc', borderwidth=2, relief='solid')
         self.canvas1.place(x=0, y=50)
@@ -227,16 +236,13 @@ class MyApp(tk.Tk):
                                y=240)
 
         # Лейблы с текстом окна об авторе
-        self.label12 = MyLabel(self.frameAuthor, text='Автор', font_size=14, font_weight='bold', x=350, y=470)
+        self.label12 = MyLabel(self.frameAuthor, text='Автор', font_size=8, x=170, y=305, bg='#e3e2e1', fg = "#616161")
 
-        self.label13 = MyLabel(self.frameAuthor, text='Студент группы 10701123', font_size=12, font_weight='bold',
-                               x=280, y=500)
+        self.label14 = MyLabel(self.frameAuthor, text='Жоров Евгений Александрович', font_size=11, font_weight='bold', bg='#e3e2e1',
+                               x=70, y=330)
 
-        self.label14 = MyLabel(self.frameAuthor, text='Жоров Евгений Александрович', font_size=12, font_weight='bold',
-                               x=260, y=530)
-
-        self.label15 = MyLabel(self.frameAuthor, text='vanasokolov844@gmail.com', font_size=12, font_weight='bold',
-                               x=270, y=560)
+        self.label15 = MyLabel(self.frameAuthor, text='vanasokolov844@gmail.com', font_size=9, font_weight='bold',
+                               x=125, y=446)
 
         # Лейблы для текста окна о программе
         self.label16 = MyLabel(self.frameAbtProgramm, text='Учет дежурств в общежитии', font_size=18,
@@ -291,6 +297,28 @@ class MyApp(tk.Tk):
         self.label34 = MyLabel(self.frameAuthentification, text = 'Войти как студент',font_size=9, font_weight='bold', x = 395, y = 570, cursor = "hand2", fg = '#6F52E6')
 
         self.label34.bind("<Button-1>", lambda e: self.fromAuthentificToMainStudent())
+
+        self.label35 = MyLabel(self.frameAuthor, text='Почта', font_size=7, fg = "#616161", x=125, y=435)
+
+        self.label36 = MyLabel(self.frameAuthor, text='+375297379694', font_size=9, font_weight='bold', x=125, y=499)
+
+        self.label37 = MyLabel(self.frameAuthor, text='Номер телефона', font_size=7, fg="#616161", x=125, y=486)
+
+        self.label38 = MyLabel(self.frameAuthor, text='Беларусь, г. Минск', font_size=9, font_weight='bold', x=125, y=549)
+
+        self.label39 = MyLabel(self.frameAuthor, text='Местоположение', font_size=7, fg="#616161", x=125, y=536)
+
+        self.label40 = MyLabel(self.frameAuthor, text='ОБО МНЕ', font_size=17, font_weight='bold', x=385, y=150)
+
+        self.label41 = MyLabel(self.frameAuthor, text='Привет! Меня зовут Женя.\nЯ студент БНТУ ФИТР гр.10701123', font_size=9, x=385, y=200)
+
+        self.label42 = MyLabel(self.frameAuthor,
+                               text='Программирование для меня не просто хобби, а настоящее увлечение.\n'
+                                    'Я получаю огромное удовольствие от создания новых проектов\n'
+                                    'и решения сложных задач.'
+                                    'Мне нравится изучать новые языки\nпрограммирования и технологии, а также'
+                                    'применять их на практике.\nЯ всегда стремлюсь к саморазвитию и стараюсь держать\n'
+                                    'руку на пульсе новых IT-трендов.', font_size=9, x=385,y=250)
 
         # Entry поля на главном окне
         # Ввод фамилии
@@ -367,10 +395,22 @@ class MyApp(tk.Tk):
         self.labelForDormitory.image = self.imageDormitory
         # self.labelForDormitory.place(x = 160, y = 370)
 
-        self.imageMe = tk.PhotoImage(file='images//Me.png')
-        self.resizedImageMe = self.imageMe.subsample(3)
-        self.labelForMe = MyLabel(self.frameAuthor, image=self.resizedImageMe, x=230, y=30)
+        self.imageMe = tk.PhotoImage(file='images//Me2.png')
+        self.resizedImageMe = self.imageMe.subsample(9)
+        self.labelForMe = MyLabel(self.frameAuthor, image=self.resizedImageMe, x=60, y=30)
         self.labelForMe.image = self.resizedImageMe
+
+        self.imageGmail = tk.PhotoImage(file='images//gmail.png')
+        self.labelForGmail = MyLabel(self.frameAuthor, image=self.imageGmail, x=90, y=440)
+        self.labelForGmail.image = self.imageGmail
+
+        self.imageSmartphone = tk.PhotoImage(file='images//smartphone.png')
+        self.labelForSmartphone = MyLabel(self.frameAuthor, image=self.imageSmartphone, x=90, y=490)
+        self.labelForSmartphone.image = self.imageSmartphone
+
+        self.imageLocation = tk.PhotoImage(file='images//location.png')
+        self.labelForLocation = MyLabel(self.frameAuthor, image=self.imageLocation, x=90, y=540)
+        self.labelForLocation.image = self.imageLocation
 
         self.imageForAbtProgramm1 = tk.PhotoImage(file='images//dormitory2.png')
         self.labelForAbtProgramm1 = MyLabel(self.frameAbtProgramm, image=self.imageForAbtProgramm1, bg="#9681F0", x=30,
@@ -484,7 +524,7 @@ class MyApp(tk.Tk):
                                        compound=tk.RIGHT, font_size=9, font_weight='bold',
                                        command=self.backFromAbtProgrammToMain, x=645, y=700)
 
-        # Кнопка об авторе (добавить потом это окно)
+        # Кнопка об авторе
         self.buttonAuthor = MyButton(self.frameMain, text='Об авторе', width=100, height=30, image=self.imageHuman,
                                      compound=tk.RIGHT, font_size=9, font_weight='bold',
                                      command=self.openAuthorFromMain, x=200, y=760)
@@ -499,11 +539,14 @@ class MyApp(tk.Tk):
         self.buttonToTheMain = MyButton(self.frameAuthor, text='На главную', width=250, height=30,
                                         image=self.imageToTheMain,
                                         compound=tk.RIGHT, font_size=9, font_weight='bold',
-                                        command=self.backFromAuthorToMain, x=265, y=700)
+                                        command=self.backFromAuthorToMain, x=385, y=400)
         # Кнопка записаться
         self.buttonZapisat = MyButton(self.frameMain, text='Записаться', width=80, height=60, image=self.imageWrite,
                                       compound=tk.TOP, font_size=9, font_weight='bold', command=self.GetResults, x=645,
                                       y=100)
+
+        self.buttonSupportAuth = MyButton(self.frameAuthor, text="Поддержать автора", fg='white', width=25, height=2,
+                                    font_size=9, font_weight='bold', bg='#8251FE', x=100, y=595)
 
         # Кнопка очистить ввод
         self.buttonClear = MyButton(self.frameMain, text="Очистить\nввод", width=80, height=60, image=self.imageClear,
@@ -570,7 +613,7 @@ class MyApp(tk.Tk):
         self.buttonMenuFile.config(menu = self.fileMenu)
 
         #Открытие файла (чтение из файла)
-        self.fileMenu.add_command(label = "Открыть",command=self.openExcelFile) #Сюда добавь команду
+        self.fileMenu.add_command(label = "Открыть",command=self.openExcelFile)
 
         self.fileMenu.add_command(label = "Очистить файл", command = self.clearDataFromExcel)
 
@@ -723,7 +766,6 @@ class MyApp(tk.Tk):
 
             self.buttonSendToBot.place_forget()
 
-
     # Очистка всех полей при нажатии кнопки очистить ввод
     def clearEntry(self):
 
@@ -811,12 +853,17 @@ class MyApp(tk.Tk):
                 return False
         return True
 
+    def checkPhoneNumber(self, phone_number):
+        # Регулярное выражение для проверки номера телефона
+        pattern = r"^\+375(29|33)\d{7}$"
+        return re.match(pattern, phone_number) is not None
+
     def validateTelNumber(self):
-        for symbol in self.TelNumber:
-            if not symbol.isdigit() and symbol not in "+":
-                tk.messagebox.showerror("Некорректный ввод", "Номер введен некорректно!")
-                self.entry4.delete(0, tk.END)
-                return False
+        if not self.checkPhoneNumber(self.TelNumber):
+            tk.messagebox.showerror("Некорректный ввод",
+                                    "Номер введен некорректно! Номер должен начинаться с +37529 или +37533")
+            self.entry4.delete(0, tk.END)
+            return False
         return True
 
     def checkAllFields(self):
@@ -1175,94 +1222,25 @@ class MyApp(tk.Tk):
 
     def saveChanges(self):
         # Получаем обновленные данные из полей
-        lastName = self.entry1.get().strip()
-        firstName = self.entry2.get().strip()
-        block = self.entry3.get().strip()
-        room = self.comboboxRoomInBlock.get().strip()
-        telNumber = self.entry4.get().strip()
-        day = self.comboboxDay.get().strip().zfill(2)  # Сохраняем ведущий ноль
-        month = next(value for key, value in self.DictForMonthes.items() if self.comboboxMonth.get() == key)
-        year = self.comboboxYear.get().strip()
-        time = self.comboboxTime.get().strip()
-        date_str = f"{day}.{month}.{year}"
-
-        # Проверка на корректность ввода фамилии
-        if any(symbol.isdigit() or symbol in "_-+=!@#$%*^()&?~/., " for symbol in lastName):
-            messagebox.showerror("Некорректный ввод", "Фамилия введена некорректно!")
-            self.entry1.delete(0, tk.END)
-            self.removeArrowAndHighlight(self.selected_index)
-            return
-
-        # Проверка на корректность ввода имени
-        if any(symbol.isdigit() or symbol in "_-+=!@#$%*^()&?~/., " for symbol in firstName):
-            messagebox.showerror("Некорректный ввод", "Имя введено некорректно!")
-            self.entry2.delete(0, tk.END)
-            self.removeArrowAndHighlight(self.selected_index)
-            return
-
-        # Проверка на корректность ввода блока
-        if any(not symbol.isdigit() for symbol in block):
-            messagebox.showerror("Некорректный ввод", "Блок введен некорректно!")
-            self.entry3.delete(0, tk.END)
-            self.removeArrowAndHighlight(self.selected_index)
-            return
-
-        # Проверка на корректность ввода номера телефона
-        if any(not symbol.isdigit() and symbol not in "+" for symbol in telNumber):
-            messagebox.showerror("Некорректный ввод", "Номер введен некорректно!")
-            self.entry4.delete(0, tk.END)
-            self.removeArrowAndHighlight(self.selected_index)
-            return
+        self.getUserInput()
 
         # Проверка все ли поля введены
-        if not all([lastName, firstName, block, telNumber, month, day, time, room, year]):
-            messagebox.showerror("Ошибка", "Введите все данные!")
+        if not self.checkAllFields():
             self.removeArrowAndHighlight(self.selected_index)
             return
 
-        # Формирование обновленной строки без стрелочки
-        updated_line = f"{lastName.capitalize()}\t\t  {firstName.capitalize()}\t\t{block}{room}\t\t{telNumber}\t\t   {date_str}\t\t{time}"
+        # Проверка корректности ввода полей
+        if not self.validateInput():
+            self.removeArrowAndHighlight(self.selected_index)
+            return
 
-        # Определение текущего индекса строки
-        if self.selected_index:
-            index = self.selected_index
-            row_index = int(index.split('.')[0]) - 3  # Корректировка для учета первых двух строк
+        # Обновление записи
+        self.processDateAndRecord()
 
-            # Получение старого времени и даты
-            old_date_str = self.recordDates[row_index]
-            old_time = self.recordTimes[row_index]
+        self.displayResults()
 
-            # Удаление старого времени из словаря dictZapisanye
-            self.removeDuty(old_date_str, old_time)
-
-            # Удаление старой строки и вставка обновленной строки
-            self.textPlace.config(state='normal')
-            self.textPlace.delete("%s linestart" % index, "%s lineend" % index)
-            self.textPlace.insert("%s linestart" % index, updated_line)
-            self.textPlace.config(state='disabled')
-
-            # Обновление данных в соответствующих списках
-            if row_index >= 0 and row_index < len(self.recordSecondNames):
-                self.recordSecondNames[row_index] = lastName
-                self.recordFirstNames[row_index] = firstName
-                self.recordBlocks[row_index] = block
-                self.recordRooms[row_index] = room
-                self.recordTelNumber[row_index] = telNumber
-                self.recordDays[row_index] = int(day)
-                self.recordMonthes[row_index] = month
-                self.recordYears[row_index] = year
-                self.recordDates[row_index] = date_str
-                self.recordTimes[row_index] = time
-                self.recordFullStrings[row_index] = updated_line
-            else:
-                print("Индекс строки выходит за пределы списка")
-
-            # Запись нового времени в словарь dictZapisanye
-            self.recordDuty(date_str, time)
-
-            # Удаление стрелки и подсветки после сохранения данных
-            self.removeArrowAndHighlight(index)
-            self.selected_index = None
+        self.clearEntry()
+        self.recordData()
 
     def removeDuty(self, date, time):
         if date in self.dictZapisanye:

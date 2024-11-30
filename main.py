@@ -176,7 +176,7 @@ class MyApp(tk.Tk):
 
         self.frameAbtProgramm = tk.Frame(self, width=800, height=850)
 
-        self.canvasAbtProgramm = tk.Canvas(self.frameAbtProgramm, width=300, height=850, bg='#9681F0')
+        self.canvasAbtProgramm = tk.Canvas(self.frameAbtProgramm, width=300, height=850, bg='#3469ED')
         self.canvasAbtProgramm.place(x=0, y=0)
 
         self.canvasAbtAuthor = tk.Canvas(self.frameAuthor, width=300, height=550, bg='#e3e2e1')
@@ -207,10 +207,11 @@ class MyApp(tk.Tk):
         self.canvas6 = tk.Canvas(self.frameMain, width=120, height=3, bg='#3469ed')
         self.canvas6.place(x=355, y=775)
 
+        self.canvas7 = tk.Canvas(self.frameMain, width=2, height=15, bg='#545454')
+        self.canvas7.place(x=120, y=61)
+
         self.frameText = tk.Frame(self.frameMain)
         self.frameText.place(x=20, y=250, width=600, height=400)
-
-
 
         self.textPlace = tk.Text(self.frameText, state='normal', font=("Montserrat", 8, 'bold'), borderwidth=2)
         self.textPlace.pack(side="left", fill="both", expand=True)
@@ -275,7 +276,7 @@ class MyApp(tk.Tk):
                                                            '5. Сохранять записи в файл форматов .docx .xlsx\n'
                                                            '6. Считывать данные с Excel\n'
                                                            '7. Отправлять docx файл в Telegram-бот', font_size=11,
-                               justify='left', bg='#eddcfc', x=350, y=130)
+                               justify='left', bg='#CDDBFE', x=350, y=130)
 
         self.label19 = MyLabel(self.frameAbtProgramm, text='Версия: 1.0.0.2024', font_size=10, x=350, y=710)
 
@@ -319,22 +320,22 @@ class MyApp(tk.Tk):
 
         self.label40 = MyLabel(self.frameAuthor, text='ОБО МНЕ', font_size=17, font_weight='bold', x=385, y=150)
 
-        self.label41 = MyLabel(self.frameAuthor, text='Привет! Меня зовут Женя.\nЯ студент БНТУ ФИТР гр.10701123', font_size=9, x=385, y=200)
+        self.label41 = MyLabel(self.frameAuthor, text='Привет! Меня зовут Женя.\nЯ студент БНТУ ФИТР гр.10701123', font_size=10, x=385, y=200)
 
         self.label42 = MyLabel(self.frameAuthor,
-                               text='Программирование для меня не просто хобби, а настоящее увлечение.\n'
-                                    'Я получаю огромное удовольствие от создания новых проектов\n'
+                               text='Программирование для меня не просто хобби, а настоящее увлечение.'
+                                    ' Я получаю огромное удовольствие от создания новых проектов '
                                     'и решения сложных задач.'
-                                    'Мне нравится изучать новые языки\nпрограммирования и технологии, а также'
-                                    'применять их на практике.\nЯ всегда стремлюсь к саморазвитию и стараюсь держать\n'
-                                    'руку на пульсе новых IT-трендов.', font_size=9, x=385,y=250)
+                                    ' Мне нравится изучать новые языки программирования и технологии, а также '
+                                    'применять их на практике. Я всегда стремлюсь к саморазвитию и стараюсь держать '
+                                    'руку на пульсе новых IT-трендов.', font_size=10, wraplength=350, x=385,y=250)
 
         self.label43 = MyLabel(self.frameMain, text="Сортировка", font_size=8, font_weight='bold',fg="#545454", x=20, y=60)
         self.label43.bind('<Enter>', self.cursorOnLabelSort)
         self.label43.bind('<Leave>', self.cursorNotOnLabelSort)
         self.label43.bind('<Button-1>', self.toggleDropdown)
 
-        self.label44 = MyLabel(self.frameMain, text="Поиск", font_size=8, font_weight='bold', fg="#545454", x=124, y=60)
+        self.label44 = MyLabel(self.frameMain, text="Поиск", font_size=8, font_weight='bold', fg="#545454", x=134, y=60)
         self.label44.bind('<Enter>', self.cursorOnLabelSearch)
         self.label44.bind('<Leave>', self.cursorNotOnLabelSearch)
         self.label44.bind('<Button-1>', self.toggleDropdownSearch)
@@ -463,7 +464,7 @@ class MyApp(tk.Tk):
         self.labelForPlus.image = self.imagePlus
 
         self.imageSearch = tk.PhotoImage(file='images//icons//Search.png')
-        self.labelForSearch = MyLabel(self.frameMain, image=self.imageSearch, x=163, y=61)
+        self.labelForSearch = MyLabel(self.frameMain, image=self.imageSearch, x=173, y=61)
         self.labelForSearch.image = self.imageSearch
 
         self.imageSort2 = tk.PhotoImage(file='images//icons//Sort2.png')
@@ -474,50 +475,49 @@ class MyApp(tk.Tk):
         self.labelSearchAcc = MyLabel(self.frameSearch, image=self.imageSearchAcc, x=139, y=14)
         self.labelSearchAcc.image = self.imageSearchAcc
 
-        self.imageMe = tk.PhotoImage(file='images//Me2.png')
+        self.imageMe = tk.PhotoImage(file='images//me//Me2.png')
         self.resizedImageMe = self.imageMe.subsample(9)
         self.labelForMe = MyLabel(self.frameAuthor, image=self.resizedImageMe, x=60, y=30)
         self.labelForMe.image = self.resizedImageMe
 
-        self.imageGmail = tk.PhotoImage(file='images//gmail.png')
-        self.labelForGmail = MyLabel(self.frameAuthor, image=self.imageGmail, x=90, y=440)
+        self.imageGmail = tk.PhotoImage(file='images//icons//Gmail.png')
+        self.labelForGmail = MyLabel(self.frameAuthor, image=self.imageGmail, x=90, y=443)
         self.labelForGmail.image = self.imageGmail
 
-        self.imageSmartphone = tk.PhotoImage(file='images//smartphone.png')
+        self.imageSmartphone = tk.PhotoImage(file='images//icons//Smartphone.png')
         self.labelForSmartphone = MyLabel(self.frameAuthor, image=self.imageSmartphone, x=90, y=490)
         self.labelForSmartphone.image = self.imageSmartphone
 
-        self.imageLocation = tk.PhotoImage(file='images//location.png')
+        self.imageLocation = tk.PhotoImage(file='images//icons//Location.png')
         self.labelForLocation = MyLabel(self.frameAuthor, image=self.imageLocation, x=90, y=540)
         self.labelForLocation.image = self.imageLocation
 
-        self.imageForAbtProgramm1 = tk.PhotoImage(file='images//dormitory2.png')
-        self.labelForAbtProgramm1 = MyLabel(self.frameAbtProgramm, image=self.imageForAbtProgramm1, bg="#9681F0", x=30,
-                                            y=230)
+        self.imageForAbtProgramm1 = tk.PhotoImage(file='images//icons//DormitoryWhite.png')
+        self.labelForAbtProgramm1 = MyLabel(self.frameAbtProgramm, image=self.imageForAbtProgramm1, bg="#3469ED", x=34,y=236)
         self.labelForAbtProgramm1.image = self.imageForAbtProgramm1
 
-        self.imageForAbtProgramm2 = tk.PhotoImage(file='images//room.png')
-        self.labelForAbtProgramm2 = MyLabel(self.frameAbtProgramm, image=self.imageForAbtProgramm2, bg='#9681F0', x=150,
+        self.imageForAbtProgramm2 = tk.PhotoImage(file='images//icons//Room.png')
+        self.labelForAbtProgramm2 = MyLabel(self.frameAbtProgramm, image=self.imageForAbtProgramm2, bg='#3469ED', x=150,
                                             y=235)
         self.labelForAbtProgramm2.image = self.imageForAbtProgramm2
 
-        self.imageForAbtProgramm3 = tk.PhotoImage(file='images//file.png')
-        self.labelForAbtProgramm3 = MyLabel(self.frameAbtProgramm, image=self.imageForAbtProgramm3, bg='#9681F0', x=30,
+        self.imageForAbtProgramm3 = tk.PhotoImage(file='images//icons//File.png')
+        self.labelForAbtProgramm3 = MyLabel(self.frameAbtProgramm, image=self.imageForAbtProgramm3, bg='#3469ED', x=30,
                                             y=350)
         self.labelForAbtProgramm3.image = self.imageForAbtProgramm3
 
-        self.imageForAbtProgramm4 = tk.PhotoImage(file='images//excel.png')
-        self.labelForAbtProgramm4 = MyLabel(self.frameAbtProgramm, image=self.imageForAbtProgramm4, bg='#9681F0', x=150,
+        self.imageForAbtProgramm4 = tk.PhotoImage(file='images//icons//Excel.png')
+        self.labelForAbtProgramm4 = MyLabel(self.frameAbtProgramm, image=self.imageForAbtProgramm4, bg='#3469ED', x=150,
                                             y=350)
         self.labelForAbtProgramm4.image = self.imageForAbtProgramm4
 
-        self.imageForAbtProgramm5 = tk.PhotoImage(file='images//human2.png')
-        self.labelForAbtProgramm5 = MyLabel(self.frameAbtProgramm, image=self.imageForAbtProgramm5, bg='#9681F0', x=30,
+        self.imageForAbtProgramm5 = tk.PhotoImage(file='images//icons//Human2.png')
+        self.labelForAbtProgramm5 = MyLabel(self.frameAbtProgramm, image=self.imageForAbtProgramm5, bg='#3469ED', x=30,
                                             y=460)
         self.labelForAbtProgramm5.image = self.imageForAbtProgramm5
 
-        self.imageForAbtProgramm6 = tk.PhotoImage(file='images//telephone.png')
-        self.labelForAbtProgramm6 = MyLabel(self.frameAbtProgramm, image=self.imageForAbtProgramm6, bg='#9681F0', x=150,
+        self.imageForAbtProgramm6 = tk.PhotoImage(file='images//icons//Telephone.png')
+        self.labelForAbtProgramm6 = MyLabel(self.frameAbtProgramm, image=self.imageForAbtProgramm6, bg='#3469ED', x=150,
                                             y=460)
         self.labelForAbtProgramm6.image = self.imageForAbtProgramm6
 
@@ -629,7 +629,7 @@ class MyApp(tk.Tk):
         # Кнопка записаться
         self.buttonZapisat = MyButton(self.frameMain, text='Записаться', width=80, height=60, image=self.imageWrite,
                                       compound=tk.TOP, font_size=9, font_weight='bold', command=self.GetResults, x=655,
-                                      y=100)
+                                      y=140)
 
         self.buttonSupportAuth = MyButton(self.frameAuthor, text="Поддержать автора", fg='white', width=25, height=2,
                                     font_size=9, font_weight='bold', bg='#3469ed', x=100, y=595)
@@ -637,26 +637,26 @@ class MyApp(tk.Tk):
         # Кнопка очистить ввод
         self.buttonClear = MyButton(self.frameMain, text="Очистить\nввод", width=80, height=60, image=self.imageClear,
                                     compound=tk.TOP, font_size=9, font_weight='bold', command=self.clearEntry, x=655,
-                                    y=210)
+                                    y=250)
 
         # Кнопка удалить данные
         self.buttonDeleteData = MyButton(self.frameMain, text='Удалить\nданные', width=80, height=60,
                                          image=self.imageDelete,
                                          compound=tk.TOP, font_size=9, font_weight='bold', command=self.deleteAllData,
-                                         x=655, y=320)
+                                         x=655, y=360)
 
         # Кнопка записи в Excel
         self.buttonToExcel = MyButton(self.frameMain, text='Сохранить\nв Excel', width=80, height=60,
                                          image=self.imageExcelBtn,
                                          compound=tk.TOP, font_size=9, font_weight='bold', command=self.infoToExcel,
-                                         x=655, y=530)
+                                         x=655, y=470)
 
 
         # Кнопка сохранения в Docx
         self.buttonToDocx = MyButton(self.frameMain, text='Сохранить\nв Word', width=80, height=60,
                                           image=self.imageWord,
                                           compound=tk.TOP, font_size=9, font_weight='bold', command = self.infoToDocx,
-                                          x = 655, y = 630)
+                                          x = 655, y = 580)
 
         # Кнопка отправки файла в бот
         self.buttonSendToBot = MyButton(self.frameMain, text='Отправить\nкоменданту', width=80, height=60,
@@ -766,6 +766,7 @@ class MyApp(tk.Tk):
             self.frameSort.place(x=20, y=85)
         self.dropDownVisibleSort = not self.dropDownVisibleSort
 
+    #Функция закрывающая фреймы
     def closeFrame(self, event):
 
         if self.frameSort:
@@ -780,6 +781,10 @@ class MyApp(tk.Tk):
 
         if self.frameSearch:
 
+            self.clearSelectionRadio()
+            self.textToSearch.config(state='normal')
+            self.textToSearch.delete("1.0", tk.END)
+            self.textToSearch.config(state='disabled')
             self.frameSearch.place_forget()
             self.dropDownVisibleSearch = False
 
@@ -791,37 +796,57 @@ class MyApp(tk.Tk):
             self.frameSearch.place(x=150, y=85)
         self.dropDownVisibleSearch = not self.dropDownVisibleSearch
 
+    #Функция снимающая метку с радиокнопки
+    def clearSelectionRadio(self):
 
-    def closeSearch(self, event):
+        searchType = self.searchOption.get()
 
-        self.frameSearch.place_forget()
-        self.dropDownVisibleSearch = False
+        if searchType:
+            self.labelSearch2.config(text="Ваш запрос")
+
+        self.searchOption.set("")
 
     def updateEntryField(self):
-        search_type = self.searchOption.get()
+        searchType = self.searchOption.get()
         # Скрываем все поля ввода сначала
         self.entryLastNamesSearch.place_forget()
         self.entryBlocksSearch.place_forget()
         self.entryDatesSearch.place_forget()
 
         # Отображаем соответствующее поле ввода в зависимости от выбранной радиокнопки
-        if search_type == "lastName":
+        if searchType == "lastName":
             self.entryLastNamesSearch.place(x=20, y=150)
-        elif search_type == "blocks":
+            self.labelSearch2.config(text="Ваш запрос (Фамилия)")
+
+        elif searchType == "blocks":
             self.entryBlocksSearch.place(x=20, y=150)
-        elif search_type == "dates":
+            self.labelSearch2.config(text="Ваш запрос (Блок)")
+
+        elif searchType == "dates":
             self.entryDatesSearch.place(x=20, y=150)
+            self.labelSearch2.config(text="Ваш запрос (XX.YY.2025)")
 
+    #Функция алгоритма поиска
     def performSearch(self):
-        search_type = self.searchOption.get()
-        search_query = ""
 
-        if search_type == "lastName":
-            search_query = self.entryLastNamesSearch.get().strip()
-        elif search_type == "blocks":
-            search_query = self.entryBlocksSearch.get().strip()
-        elif search_type == "dates":
-            search_query = self.entryDatesSearch.get().strip()
+        searchType = self.searchOption.get()
+        searchQuery = ""
+
+        if searchType == "lastName":
+            searchQuery = self.entryLastNamesSearch.get().strip()
+
+
+
+        elif searchType == "blocks":
+            searchQuery = self.entryBlocksSearch.get().strip()
+
+
+
+        elif searchType == "dates":
+            searchQuery = self.entryDatesSearch.get().strip()
+
+
+
         else:
             messagebox.showinfo("Ошибка", "Выберите тип поиска")
             return
@@ -829,16 +854,16 @@ class MyApp(tk.Tk):
         self.textToSearch.config(state='normal')
         self.textToSearch.delete(1.0, tk.END)
 
-        if not search_query:
+        if not searchQuery:
             messagebox.showinfo("Ошибка", "Введите поисковый запрос")
             self.textToSearch.config(state='disabled')
             return
 
         found = False  # Флаг для отслеживания наличия совпадений
 
-        if search_type == "lastName":
+        if searchType == "lastName":
             for i, second_name in enumerate(self.recordSecondNames):
-                if search_query.lower() == second_name.lower():
+                if searchQuery.lower() == second_name.lower():
                     found = True
                     record_info = f"Фамилия: {self.recordSecondNames[i]}\n" \
                                   f"Имя: {self.recordFirstNames[i]}\n" \
@@ -848,9 +873,12 @@ class MyApp(tk.Tk):
                                   f"Дата: {self.recordDates[i]}\n" \
                                   f"Время: {self.recordTimes[i]}\n\n"
                     self.textToSearch.insert(tk.END, record_info)
-        elif search_type == "blocks":
+
+            self.entryLastNamesSearch.delete(0, tk.END)
+
+        elif searchType == "blocks":
             for i, block in enumerate(self.recordBlocks):
-                if search_query.lower() == block.lower():
+                if searchQuery.lower() == block.lower():
                     found = True
                     record_info = f"Фамилия: {self.recordSecondNames[i]}\n" \
                                   f"Имя: {self.recordFirstNames[i]}\n" \
@@ -860,9 +888,12 @@ class MyApp(tk.Tk):
                                   f"Дата: {self.recordDates[i]}\n" \
                                   f"Время: {self.recordTimes[i]}\n\n"
                     self.textToSearch.insert(tk.END, record_info)
-        elif search_type == "dates":
+
+            self.entryBlocksSearch.delete(0, tk.END)
+
+        elif searchType == "dates":
             for i, date in enumerate(self.recordDates):
-                if search_query == date:
+                if searchQuery == date:
                     found = True
                     record_info = f"Фамилия: {self.recordSecondNames[i]}\n" \
                                   f"Имя: {self.recordFirstNames[i]}\n" \
@@ -872,6 +903,7 @@ class MyApp(tk.Tk):
                                   f"Дата: {self.recordDates[i]}\n" \
                                   f"Время: {self.recordTimes[i]}\n\n"
                     self.textToSearch.insert(tk.END, record_info)
+            self.entryDatesSearch.delete(0, tk.END)
 
         if not found:
             messagebox.showinfo("Результат поиска", "Совпадений не найдено")
@@ -980,9 +1012,9 @@ class MyApp(tk.Tk):
             self.buttonClear.place_forget()
             self.fileMenu.delete(1)
 
-            self.buttonToExcel.place(x=655, y=370)
-            self.buttonSendToBot.place(x = 655, y = 475)
-            self.buttonClear.place(x = 655, y = 260)
+            self.buttonToExcel.place(x=655, y=400)
+            self.buttonSendToBot.place(x = 655, y = 505)
+            self.buttonClear.place(x = 655, y = 290)
 
             self.startReading()
 
@@ -1875,26 +1907,48 @@ class HelpWindow():
         self.frameHelp6 = tk.Frame(self.helpWindow, width=600, height=600)
         self.frameHelp7 = tk.Frame(self.helpWindow, width=600, height=600)
 
-        self.canvasHelp1 = tk.Canvas(self.frameHelp1, width=130, height=600, bg='#9681F0')
+        self.canvasHelp1 = tk.Canvas(self.frameHelp1, width=130, height=600, bg='#3469ED')
         self.canvasHelp1.place(x = 470, y = 0)
 
-        self.canvasHelp2 = tk.Canvas(self.frameHelp2, width=130, height=600, bg='#9681F0')
+        self.canvasHelp2 = tk.Canvas(self.frameHelp2, width=130, height=600, bg='#3469ED')
         self.canvasHelp2.place(x=470, y=0)
 
-        self.canvasHelp3 = tk.Canvas(self.frameHelp3, width=130, height=600, bg='#9681F0')
+        self.canvasHelp3 = tk.Canvas(self.frameHelp3, width=130, height=600, bg='#3469ED')
         self.canvasHelp3.place(x=470, y=0)
 
-        self.canvasHelp4 = tk.Canvas(self.frameHelp4, width=130, height=600, bg='#9681F0')
+        self.canvasHelp4 = tk.Canvas(self.frameHelp4, width=130, height=600, bg='#3469ED')
         self.canvasHelp4.place(x=470, y=0)
 
-        self.canvasHelp5 = tk.Canvas(self.frameHelp5, width=130, height=600, bg='#9681F0')
+        self.canvasHelp5 = tk.Canvas(self.frameHelp5, width=130, height=600, bg='#3469ED')
         self.canvasHelp5.place(x=470, y=0)
 
-        self.canvasHelp6 = tk.Canvas(self.frameHelp6, width=130, height=600, bg='#9681F0')
+        self.canvasHelp6 = tk.Canvas(self.frameHelp6, width=130, height=600, bg='#3469ED')
         self.canvasHelp6.place(x=470, y=0)
 
-        self.canvasHelp7 = tk.Canvas(self.frameHelp7, width=130, height=600, bg='#9681F0')
-        self.canvasHelp7.place(x=470, y=0)
+        self.imageWrite = tk.PhotoImage(file = 'images//icons//Write.png')
+        self.labelForWrite = MyLabel(self.frameHelp1, image = self.imageWrite, bg = "#3469ED", x = 490, y = 135)
+        self.labelForWrite.image = self.imageWrite
+
+        self.imageClear = tk.PhotoImage(file='images//icons//Clear.png')
+        self.labelForClear = MyLabel(self.frameHelp2, image=self.imageClear, bg="#3469ED", x=490, y=135)
+        self.labelForClear.image = self.imageClear
+
+        self.imageDelete = tk.PhotoImage(file='images//icons//Delete.png')
+        self.labelForDelete = MyLabel(self.frameHelp3, image=self.imageDelete, bg="#3469ED", x=490, y=135)
+        self.labelForDelete.image = self.imageDelete
+
+        self.imageExcel = tk.PhotoImage(file='images//icons//Excel.png')
+        self.labelForExcel = MyLabel(self.frameHelp4, image=self.imageExcel, bg="#3469ED", x=490, y=135)
+        self.labelForExcel.image = self.imageExcel
+
+        self.imageWord = tk.PhotoImage(file='images//icons//Word.png')
+        self.labelForWord = MyLabel(self.frameHelp5, image=self.imageWord, bg="#3469ED", x=490, y=135)
+        self.labelForWord.image = self.imageWord
+
+        self.imageSend = tk.PhotoImage(file='images//icons//Send.png')
+        self.labelForSend = MyLabel(self.frameHelp6, image=self.imageSend, bg="#3469ED", x=490, y=135)
+        self.labelForSend.image = self.imageSend
+
 
         self.labelHelp1 = tk.Label(self.frameHelp1, text = "Кнопка 'Записаться'", font = ("Montserrat", 13, 'bold'))
         self.labelHelp1.place(x = 170, y = 25)
@@ -1949,18 +2003,6 @@ class HelpWindow():
                                                           "Доступ : студент", font=("Montserrat", 10), justify="left")
         self.labelHelp66.place(x=30, y=100)
 
-        self.labelHelp7 = tk.Label(self.frameHelp7, text="Кнопка 'Выбрать сортировку'",
-                                   font=("Montserrat", 13, 'bold'))
-        self.labelHelp7.place(x=170, y=25)
-
-        self.labelHelp77 = tk.Label(self.frameHelp7, text="Данная кнопка открывает окно, где пользователю\n предлагается"
-                                                          "выбрать варианты сортировки.\n\nВ случае успешной сортировки\n"
-                                                          "изменения появятся в главном окне.\n"
-                                                          "Eсли недостаточно данных для сортировки, будет выдана ошибка.\n\n"
-                                                          "Доступ : комендант", font=("Montserrat", 10), justify="left")
-        self.labelHelp77.place(x=30, y=100)
-
-
         self.addNavigationButtons()
 
     def addNavigationButtons(self):
@@ -1980,11 +2022,9 @@ class HelpWindow():
         MyButton(self.frameHelp5, text="Далее", width=10, height=2, x=350, y=300, command=self.fromHelp5ToHelp6)
         MyButton(self.frameHelp5, text="Назад", width=10, height=2, x=50, y=300, command=self.fromHelp5ToHelp4)
 
-        MyButton(self.frameHelp6, text="Далее", width=10, height=2, x=350, y=300, command=self.fromHelp6ToHelp7)
+        MyButton(self.frameHelp6, text="Выход", width=10, height=2, x=350, y=300, command=self.closeWindowHelp)
         MyButton(self.frameHelp6, text="Назад", width=10, height=2, x=50, y=300, command=self.fromHelp6ToHelp5)
 
-        MyButton(self.frameHelp7, text="Назад", width=10, height=2, x=50, y=300, command=self.fromHelp7ToHelp6)
-        MyButton(self.frameHelp7, text="Выход", width=10, height=2, x=350, y=300, command=self.closeWindowHelp)
 
     def fromHelp1ToHelp2(self):
         self.frameHelp1.pack_forget()
@@ -2022,17 +2062,9 @@ class HelpWindow():
         self.frameHelp5.pack_forget()
         self.frameHelp4.pack()
 
-    def fromHelp6ToHelp7(self):
-        self.frameHelp6.pack_forget()
-        self.frameHelp7.pack()
-
     def fromHelp6ToHelp5(self):
         self.frameHelp6.pack_forget()
         self.frameHelp5.pack()
-
-    def fromHelp7ToHelp6(self):
-        self.frameHelp7.pack_forget()
-        self.frameHelp6.pack()
 
     def closeWindowHelp(self):
         self.helpWindow.destroy()
